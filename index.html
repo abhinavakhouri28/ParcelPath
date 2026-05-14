@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ParcelPath — Affordable Housing Site Sourcing</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg: #0b1220;
+    --panel: #111a2e;
+    --panel-2: #1a2540;
+    --border: #243150;
+    --text: #e6ecf5;
+    --muted: #8a99b8;
+    --accent: #5eead4;
+    --accent-2: #818cf8;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --good: #34d399;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .panel { background: var(--panel); border: 1px solid var(--border); }
+  .panel-2 { background: var(--panel-2); border: 1px solid var(--border); }
+  .chip { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:9999px; font-size:11px; font-weight:600; border:1px solid var(--border); background:#111a2e; color: var(--muted); }
+  .chip-good { color:#0b1220; background: var(--good); border-color: var(--good); }
+  .chip-accent { color:#0b1220; background: var(--accent); border-color: var(--accent); }
+  .chip-indigo { color:#0b1220; background: var(--accent-2); border-color: var(--accent-2); }
+  .chip-warn { color:#0b1220; background: var(--warn); border-color: var(--warn); }
+  .input, .select { background:#0b1220; border:1px solid var(--border); color: var(--text); border-radius:8px; padding:8px 10px; font-size:13px; width:100%; }
+  .input:focus, .select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(94,234,212,.15); }
+  .btn { background: var(--accent); color:#0b1220; font-weight:600; border-radius:8px; padding:8px 12px; font-size:13px; }
+  .btn:hover { filter: brightness(1.05); }
+  .btn-ghost { background: transparent; color: var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; }
+  .btn-ghost:hover { background: var(--panel-2); }
+  .site-card { transition: transform .12s ease, border-color .12s ease; }
+  .site-card:hover { transform: translateY(-1px); border-color: var(--accent); cursor: pointer; }
+  .map-bg { background:
+    radial-gradient(circle at 20% 30%, rgba(94,234,212,.10), transparent 40%),
+    radial-gradient(circle at 70% 60%, rgba(129,140,248,.10), transparent 40%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 40px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 1px, transparent 1px 40px),
+    #0b1220;
+  }
+  .scrollbar::-webkit-scrollbar { width: 8px; }
+  .scrollbar::-webkit-scrollbar-thumb { background: #243150; border-radius: 8px; }
+  .pin { position:absolute; transform: translate(-50%, -50%); }
+  .pin-dot { width:14px; height:14px; border-radius:50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(94,234,212,.25); border:2px solid #0b1220; cursor:pointer; }
+  .pin-dot.active { background: var(--accent-2); box-shadow: 0 0 0 6px rgba(129,140,248,.3); }
+  .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; background:#0b1220; border:1px solid var(--border); padding: 1px 6px; border-radius:4px; color: var(--muted); }
+  .divider { height:1px; background: var(--border); }
+  .num { font-variant-numeric: tabular-nums; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  .grow-input { background: transparent; border: none; color: var(--text); width: 90px; text-align:right; font-variant-numeric: tabular-nums; }
+  .grow-input:focus { outline: none; }
+  .slider { -webkit-appearance:none; appearance:none; width:100%; height:4px; background: var(--border); border-radius:4px; }
+  .slider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:14px; height:14px; border-radius:50%; background: var(--accent); cursor:pointer; }
+  .bar { background: var(--panel-2); height: 8px; border-radius: 9999px; overflow:hidden; }
+  .bar > span { display:block; height:100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =========================================================
+   ParcelPath — single-file prototype
+   Affordable-housing site sourcing, mock data
+   ========================================================= */
+
+// -------------------- MOCK DATA --------------------
+// All 10 sites in Miami-Dade County, FL. Map coords laid out roughly:
+//   N (Aventura) → top, S (Cutler Bay) → bottom, E (Beach/Biscayne) → right,
+//   W (Hialeah/Doral) → left, Downtown/Brickell → center-right.
+const SITES = [
+  {
+    id: "mia-33136-001",
+    addr: "1428 NW 3rd Ave",
+    city: "Miami", state: "FL", zip: "33136", county: "Miami-Dade County",
+    lat: 50, lng: 70, // Overtown — central, just NW of downtown
+    lotSF: 18000,
+    askPrice: 1450000,
+    photo: "🏙️",
+    currentUse: "Vacant lot + small contractor yard",
+    zoning: { code: "T6-8-O", name: "Urban Core Transect — 8 stories, Open", far: 5.0, maxHeight: 95, maxUnitsAcre: 150, minParking: 1.5, setbacks: "10'/0'/10' (build-to)" },
+    allowedUses: ["Multifamily", "Mixed-use w/ ground retail", "Lodging", "Live-work"],
+    constructionTypes: ["Type I-A (concrete, hurricane-rated)", "Type III-A over podium", "Modular (steel)"],
+    permits: [
+      { name: "Miami 21 Warrant (admin)", time: "3–4 mo", cost: 28000, required: true, note: "Public Benefits bonus available for AH units" },
+      { name: "Building Permit (City of Miami + Miami-Dade)", time: "5–7 mo", cost: 145000, required: true, note: "Dual review — hurricane code per FBC HVHZ" },
+      { name: "DERM Environmental Resource", time: "2–3 mo", cost: 12000, required: true, note: "Standard for Miami-Dade — stormwater + groundwater" },
+      { name: "Live Local Act Administrative Approval", time: "60 days", cost: 8000, required: false, note: "By-right if ≥40% units @ ≤120% AMI for 30 yrs" }
+    ],
+    incentives: ["LIHTC 9%", "QCT", "DDA", "Opportunity Zone", "SE Overtown/Park West CRA", "Miami-Dade Surtax", "SAIL", "Miami Forever Bond", "Live Local Act"],
+    incentiveFlags: { lihtc: true, oz: true, densityBonus: true, inclusionary: false, qct: true, dda: true, tod: true, hudHome: true, liveLocal: true, surtax: true, floodAE: true },
+    proforma: { hardCostSF: 365, units: 84, avgUnitSF: 700, amiTarget: 60, monthlyRentRestricted: 1340, marketRentSF: 3.50 },
+    notes: "Inside SE Overtown/Park West CRA — TIF available. 0.3 mi to Historic Overtown/Lyric Theatre Metrorail. Live Local Act unlocks 150% density vs base — top-tier stacking site in the mock set."
+  },
+  {
+    id: "mia-33135-002",
+    addr: "1240 SW 8th St (Calle Ocho)",
+    city: "Miami", state: "FL", zip: "33135", county: "Miami-Dade County",
+    lat: 58, lng: 62,
+    lotSF: 12500,
+    askPrice: 1250000,
+    photo: "🌴",
+    currentUse: "Single-story retail (vacated bodega + parking)",
+    zoning: { code: "T5-O", name: "Urban Center Transect — Open", far: 3.0, maxHeight: 70, maxUnitsAcre: 65, minParking: 1.5, setbacks: "10'/0'/10'" },
+    allowedUses: ["Multifamily", "Mixed-use", "Restaurants", "Live-work"],
+    constructionTypes: ["Type I-A (concrete)", "Type III-A wood over concrete podium", "Adaptive reuse partial"],
+    permits: [
+      { name: "Miami 21 Warrant", time: "2–3 mo", cost: 22000, required: true },
+      { name: "Building Permit", time: "4–6 mo", cost: 98000, required: true, note: "HVHZ — Miami-Dade NOA required for all openings" },
+      { name: "DERM Review", time: "2 mo", cost: 9500, required: true },
+      { name: "East Little Havana NRSA notification", time: "1 mo", cost: 0, required: true }
+    ],
+    incentives: ["LIHTC 9%", "QCT", "Opportunity Zone", "East Little Havana NRSA", "Miami-Dade Surtax", "SHIP", "Miami Forever Bond"],
+    incentiveFlags: { lihtc: true, oz: true, densityBonus: true, inclusionary: false, qct: true, dda: false, tod: false, hudHome: true, liveLocal: true, surtax: true, floodAE: false },
+    proforma: { hardCostSF: 350, units: 42, avgUnitSF: 680, amiTarget: 60, monthlyRentRestricted: 1325, marketRentSF: 3.20 },
+    notes: "Calle Ocho frontage — strong ground-floor retail. Within East Little Havana NRSA. Live Local Act overlay would push to T6-equivalent height matched within 1-mile radius."
+  },
+  {
+    id: "mia-33142-003",
+    addr: "6234 NW 17th Ave",
+    city: "Miami", state: "FL", zip: "33142", county: "Miami-Dade County",
+    lat: 38, lng: 52, // Liberty City
+    lotSF: 22500,
+    askPrice: 580000,
+    photo: "🏘️",
+    currentUse: "3 demolished SFR lots, slab partial",
+    zoning: { code: "T4-L", name: "General Urban Transect — Limited", far: 1.5, maxHeight: 50, maxUnitsAcre: 36, minParking: 1.0, setbacks: "20'/5'/10'" },
+    allowedUses: ["Multifamily up to 12 units/structure", "Townhouse", "Live-work"],
+    constructionTypes: ["Type V-A (4 stories)", "Type III-A", "Modular townhouse"],
+    permits: [
+      { name: "Miami 21 Warrant", time: "2–3 mo", cost: 14000, required: true },
+      { name: "Building Permit", time: "3–5 mo", cost: 64000, required: true },
+      { name: "DERM Review", time: "2 mo", cost: 7500, required: true },
+      { name: "Liberty City Trust coordination", time: "1 mo", cost: 0, required: false, note: "Eligible for community land trust partnership" }
+    ],
+    incentives: ["LIHTC 9%", "QCT", "DDA", "Liberty City Trust", "Miami-Dade Surtax", "SAIL", "Hometown Heroes (workforce)"],
+    incentiveFlags: { lihtc: true, oz: false, densityBonus: true, inclusionary: false, qct: true, dda: true, tod: false, hudHome: true, liveLocal: true, surtax: true, floodAE: false },
+    proforma: { hardCostSF: 305, units: 36, avgUnitSF: 760, amiTarget: 50, monthlyRentRestricted: 1015, marketRentSF: 2.10 },
+    notes: "QCT + DDA = 130% basis boost. Adjacent to Brownsville Transit Village TOD. Land basis very low for Miami — strongest yield play in this market."
+  },
+  {
+    id: "mia-33138-004",
+    addr: "5921 NE 2nd Ave",
+    city: "Miami", state: "FL", zip: "33138", county: "Miami-Dade County",
+    lat: 32, lng: 68, // Little Haiti
+    lotSF: 14500,
+    askPrice: 920000,
+    photo: "🎨",
+    currentUse: "Vacant — former gas station (Phase II remediation done)",
+    zoning: { code: "T4-O", name: "General Urban Transect — Open", far: 1.5, maxHeight: 50, maxUnitsAcre: 36, minParking: 1.0, setbacks: "10'/0'/10'" },
+    allowedUses: ["Multifamily", "Mixed-use", "Live-work", "Cultural/arts"],
+    constructionTypes: ["Type V-A (4 stories)", "Type III-A over podium", "Modular"],
+    permits: [
+      { name: "Miami 21 Warrant", time: "2–3 mo", cost: 18000, required: true },
+      { name: "Building Permit", time: "4–5 mo", cost: 78000, required: true },
+      { name: "DERM Brownfield Closure", time: "Complete", cost: 0, required: true, note: "Closed — clean letter on file" },
+      { name: "Little Haiti SAP coordination", time: "2 mo", cost: 6000, required: false }
+    ],
+    incentives: ["LIHTC 9%", "QCT", "DDA", "Opportunity Zone", "Brownfield Bonus Refund", "Miami-Dade Surtax", "Miami Forever Bond"],
+    incentiveFlags: { lihtc: true, oz: true, densityBonus: true, inclusionary: false, qct: true, dda: true, tod: true, hudHome: true, liveLocal: true, surtax: true, floodAE: true },
+    proforma: { hardCostSF: 335, units: 36, avgUnitSF: 720, amiTarget: 60, monthlyRentRestricted: 1260, marketRentSF: 3.05 },
+    notes: "Inside Little Haiti Brownfield Area — eligible for FL Brownfield Redevelopment Bonus Refund ($2,500/job + tax credits). 0.5 mi to future Little Haiti SMART corridor stop."
+  },
+  {
+    id: "mia-33125-005",
+    addr: "1812 NW 36th St",
+    city: "Miami", state: "FL", zip: "33125", county: "Miami-Dade County",
+    lat: 48, lng: 58, // Allapattah
+    lotSF: 15000,
+    askPrice: 980000,
+    photo: "🏗️",
+    currentUse: "Industrial warehouse (vacant, structurally sound)",
+    zoning: { code: "T5-L", name: "Urban Center Transect — Limited", far: 3.0, maxHeight: 70, maxUnitsAcre: 65, minParking: 1.5, setbacks: "10'/5'/10'" },
+    allowedUses: ["Multifamily", "Mixed-use", "Adaptive reuse", "Live-work"],
+    constructionTypes: ["Adaptive reuse (warehouse shell)", "Type I-A new build", "Type III-A over podium"],
+    permits: [
+      { name: "Miami 21 Warrant + Adaptive Reuse", time: "3–4 mo", cost: 24000, required: true },
+      { name: "Building Permit", time: "4–6 mo", cost: 105000, required: true },
+      { name: "DERM Review", time: "2 mo", cost: 9500, required: true }
+    ],
+    incentives: ["LIHTC 9% or 4%+Bonds", "QCT", "Opportunity Zone", "Allapattah CRA (proposed)", "Miami-Dade Surtax", "SAIL", "Live Local Act"],
+    incentiveFlags: { lihtc: true, oz: true, densityBonus: true, inclusionary: false, qct: true, dda: false, tod: true, hudHome: true, liveLocal: true, surtax: true, floodAE: false },
+    proforma: { hardCostSF: 295, units: 48, avgUnitSF: 680, amiTarget: 60, monthlyRentRestricted: 1275, marketRentSF: 2.85 },
+    notes: "Adaptive reuse saves ~$3M vs ground-up. 0.4 mi to Allapattah Metrorail. Hot submarket — Rubell Museum effect."
+  },
+  {
+    id: "mia-33127-006",
+    addr: "245 NW 26th St",
+    city: "Miami", state: "FL", zip: "33127", county: "Miami-Dade County",
+    lat: 44, lng: 67, // Wynwood
+    lotSF: 11200,
+    askPrice: 1950000,
+    photo: "🎭",
+    currentUse: "Surface parking + 1-story retail",
+    zoning: { code: "NRD-1", name: "Wynwood Neighborhood Revitalization District", far: 3.5, maxHeight: 84, maxUnitsAcre: 150, minParking: 1.0, setbacks: "10'/0'/10' (build-to)" },
+    allowedUses: ["Multifamily", "Mixed-use", "Lodging", "Studio/maker", "Galleries"],
+    constructionTypes: ["Type I-A (concrete high-rise)", "Type III-A over podium"],
+    permits: [
+      { name: "NRD-1 Design Review", time: "3–4 mo", cost: 32000, required: true },
+      { name: "Building Permit", time: "5–7 mo", cost: 175000, required: true, note: "HVHZ + NRD design overlay" },
+      { name: "DERM Review", time: "2–3 mo", cost: 14000, required: true },
+      { name: "Wynwood BID notification", time: "1 mo", cost: 0, required: true }
+    ],
+    incentives: ["LIHTC 4% + Tax-Exempt Bonds", "Workforce Housing Bonus (NRD-1)", "Live Local Act", "Miami-Dade Surtax"],
+    incentiveFlags: { lihtc: true, oz: false, densityBonus: true, inclusionary: true, qct: false, dda: false, tod: false, hudHome: false, liveLocal: true, surtax: true, floodAE: false },
+    proforma: { hardCostSF: 410, units: 52, avgUnitSF: 620, amiTarget: 80, monthlyRentRestricted: 1850, marketRentSF: 4.20 },
+    notes: "Workforce play (80–120% AMI) — pure deep-affordable is hard to pencil at Wynwood land basis. Live Local Act + 4% bonds + workforce rents is the realistic stack."
+  },
+  {
+    id: "mia-33142-007",
+    addr: "5314 NW 27th Ave",
+    city: "Miami", state: "FL", zip: "33142", county: "Miami-Dade County",
+    lat: 40, lng: 45, // Brownsville
+    lotSF: 26000,
+    askPrice: 450000,
+    photo: "🚉",
+    currentUse: "Vacant — Miami-Dade Public Housing land bank parcel",
+    zoning: { code: "T4-R", name: "General Urban Transect — Restricted", far: 1.5, maxHeight: 50, maxUnitsAcre: 36, minParking: 1.0, setbacks: "20'/5'/10'" },
+    allowedUses: ["Multifamily", "Townhouse", "Senior housing"],
+    constructionTypes: ["Type V-A (4 stories)", "Type III-A", "Modular"],
+    permits: [
+      { name: "Miami 21 Warrant", time: "2–3 mo", cost: 12000, required: true },
+      { name: "Building Permit", time: "3–5 mo", cost: 68000, required: true },
+      { name: "DERM Review", time: "2 mo", cost: 7500, required: true },
+      { name: "Miami-Dade PHCD ground lease negotiation", time: "4–6 mo", cost: 0, required: true, note: "99-yr ground lease, $1/yr standard for AH" }
+    ],
+    incentives: ["LIHTC 9%", "QCT", "DDA", "Brownsville Transit Village TOD", "PHCD ground lease", "Miami-Dade Surtax", "SAIL"],
+    incentiveFlags: { lihtc: true, oz: false, densityBonus: true, inclusionary: false, qct: true, dda: true, tod: true, hudHome: true, liveLocal: true, surtax: true, floodAE: false },
+    proforma: { hardCostSF: 300, units: 44, avgUnitSF: 740, amiTarget: 50, monthlyRentRestricted: 985, marketRentSF: 2.00 },
+    notes: "$1/yr ground lease (effective $0 land basis) + 9% LIHTC + 130% basis boost. Brownsville Metrorail 0.2 mi. Strongest yield-on-cost in mock set if PHCD partnership executes."
+  },
+  {
+    id: "mia-33147-008",
+    addr: "8401 NW 17th Ave",
+    city: "Miami", state: "FL", zip: "33147", county: "Miami-Dade County",
+    lat: 28, lng: 48, // West Little River (unincorporated Miami-Dade)
+    lotSF: 19800,
+    askPrice: 390000,
+    photo: "🏚️",
+    currentUse: "Vacant lot + boarded SFR",
+    zoning: { code: "RU-TH (Miami-Dade)", name: "Residential — Townhouse District (Miami-Dade UDB)", far: 0.8, maxHeight: 40, maxUnitsAcre: 27, minParking: 1.0, setbacks: "15'/5'/10'" },
+    allowedUses: ["Townhouse", "Multifamily (small)", "Live-work"],
+    constructionTypes: ["Type V-A (3 stories)", "Modular townhouse", "Type III-A"],
+    permits: [
+      { name: "Miami-Dade Zoning Hearing (if multifamily)", time: "4–6 mo", cost: 18000, required: false },
+      { name: "Building Permit (Miami-Dade County)", time: "3–5 mo", cost: 54000, required: true },
+      { name: "DERM Review", time: "2 mo", cost: 7500, required: true }
+    ],
+    incentives: ["LIHTC 9%", "QCT", "DDA", "Opportunity Zone", "Miami-Dade Surtax", "SHIP", "Hometown Heroes"],
+    incentiveFlags: { lihtc: true, oz: true, densityBonus: true, inclusionary: false, qct: true, dda: true, tod: false, hudHome: true, liveLocal: true, surtax: true, floodAE: false },
+    proforma: { hardCostSF: 280, units: 24, avgUnitSF: 820, amiTarget: 60, monthlyRentRestricted: 1140, marketRentSF: 1.85 },
+    notes: "Unincorporated Miami-Dade — county zoning, not Miami 21. Live Local Act applies but base zoning is low — uplift is significant. Strong basis stack."
+  },
+  {
+    id: "mia-33133-009",
+    addr: "3540 Grand Ave",
+    city: "Miami", state: "FL", zip: "33133", county: "Miami-Dade County",
+    lat: 72, lng: 65, // West Grove (Coconut Grove West)
+    lotSF: 8500,
+    askPrice: 1100000,
+    photo: "🌳",
+    currentUse: "Boarded SFR (historic Bahamian Village context)",
+    zoning: { code: "T4-L (West Grove Overlay)", name: "General Urban + West Grove Special Area Plan", far: 1.5, maxHeight: 45, maxUnitsAcre: 36, minParking: 1.0, setbacks: "10'/5'/10'" },
+    allowedUses: ["Multifamily", "Townhouse", "Live-work", "Community uses"],
+    constructionTypes: ["Type V-A (3 stories)", "Type III-A", "Modular"],
+    permits: [
+      { name: "West Grove SAP Design Review", time: "3–5 mo", cost: 28000, required: true, note: "Bahamian Village context — heightened design review" },
+      { name: "Building Permit", time: "4–5 mo", cost: 62000, required: true },
+      { name: "DERM Review", time: "2 mo", cost: 7500, required: true },
+      { name: "Historic Preservation Board", time: "2 mo", cost: 5000, required: false }
+    ],
+    incentives: ["LIHTC 9%", "Coconut Grove CRA (West Grove)", "Miami-Dade Surtax", "Miami Forever Bond", "Hometown Heroes"],
+    incentiveFlags: { lihtc: true, oz: false, densityBonus: true, inclusionary: true, qct: true, dda: false, tod: false, hudHome: true, liveLocal: true, surtax: true, floodAE: false },
+    proforma: { hardCostSF: 340, units: 14, avgUnitSF: 720, amiTarget: 80, monthlyRentRestricted: 1490, marketRentSF: 3.85 },
+    notes: "Small lot — workforce/mixed-income product. Anti-displacement focus in West Grove. CRA can provide gap financing + acquisition assistance."
+  },
+  {
+    id: "mdc-33161-010",
+    addr: "13525 NE 6th Ave",
+    city: "North Miami", state: "FL", zip: "33161", county: "Miami-Dade County",
+    lat: 18, lng: 72, // North Miami
+    lotSF: 32000,
+    askPrice: 680000,
+    photo: "🌊",
+    currentUse: "Vacant commercial strip (demolished)",
+    zoning: { code: "B-2 / MU-1 (North Miami)", name: "North Miami Mixed-Use Corridor", far: 2.0, maxHeight: 60, maxUnitsAcre: 80, minParking: 1.0, setbacks: "10'/5'/10'" },
+    allowedUses: ["Multifamily", "Mixed-use", "Retail", "Senior housing"],
+    constructionTypes: ["Type I-A (concrete)", "Type III-A over podium", "Modular"],
+    permits: [
+      { name: "North Miami Site Plan Review", time: "3–4 mo", cost: 22000, required: true },
+      { name: "Building Permit (North Miami + Miami-Dade)", time: "4–6 mo", cost: 95000, required: true, note: "Coastal — base flood elevation +1' freeboard" },
+      { name: "DERM + DEP Coastal Review", time: "3 mo", cost: 16000, required: true }
+    ],
+    incentives: ["LIHTC 9%", "QCT", "Opportunity Zone", "North Miami CRA", "Miami-Dade Surtax", "SAIL", "Live Local Act"],
+    incentiveFlags: { lihtc: true, oz: true, densityBonus: true, inclusionary: false, qct: true, dda: false, tod: false, hudHome: true, liveLocal: true, surtax: true, floodAE: true },
+    proforma: { hardCostSF: 320, units: 64, avgUnitSF: 700, amiTarget: 60, monthlyRentRestricted: 1245, marketRentSF: 2.65 },
+    notes: "Inside FEMA AE flood zone — slab on grade not viable, podium + freeboard required. Live Local Act significantly increases density vs base 80/ac. North Miami CRA gap financing common."
+  }
+];
+
+// -------------------- STATE --------------------
+let state = {
+  query: "",
+  selectedId: null,
+  filters: {
+    lihtc: false, oz: false, densityBonus: false, inclusionary: false,
+    qct: false, dda: false, tod: false, hudHome: false,
+    liveLocal: false, surtax: false, excludeFloodAE: false,
+    constructionType: "any",
+    maxPrice: 2000000,
+    minLotSF: 0,
+  },
+  pfOverride: {}, // {siteId: {hardCostSF, units, monthlyRentRestricted, ...}}
+};
+
+// -------------------- HELPERS --------------------
+const fmt$ = n => n == null ? "—" : "$" + Math.round(n).toLocaleString();
+const fmt$k = n => n == null ? "—" : "$" + Math.round(n/1000).toLocaleString() + "k";
+const fmt$m = n => n == null ? "—" : "$" + (n/1e6).toFixed(2) + "M";
+const fmtNum = n => n == null ? "—" : Math.round(n).toLocaleString();
+const fmtPct = n => n == null ? "—" : (n*100).toFixed(2) + "%";
+const fmtSF = n => fmtNum(n) + " SF";
+const acres = sf => (sf / 43560).toFixed(2);
+
+function getPF(site) {
+  return { ...site.proforma, ...(state.pfOverride[site.id] || {}) };
+}
+
+function computePF(site) {
+  const pf = getPF(site);
+  const buildableSF = pf.units * pf.avgUnitSF * 1.18; // 18% loss factor for circ/common
+  const hardCost = buildableSF * pf.hardCostSF;
+  const softCostPct = 0.22;
+  const softCost = hardCost * softCostPct;
+  const landCost = site.askPrice;
+  const contingency = (hardCost + softCost) * 0.05;
+  const tdc = landCost + hardCost + softCost + contingency;
+  const costPerUnit = tdc / pf.units;
+  const annualRentRestricted = pf.monthlyRentRestricted * pf.units * 12;
+  const opex = annualRentRestricted * 0.42; // OpEx ratio
+  const noi = annualRentRestricted * (1 - 0.42) - (pf.units * 250); // less reserves
+  const yieldOnCost = noi / tdc;
+  // LIHTC eligible basis: roughly TDC minus land minus non-residential
+  const eligibleBasis = (hardCost + softCost + contingency) * 0.95;
+  const basisBoost = (site.incentiveFlags.qct || site.incentiveFlags.dda) ? 1.30 : 1.0;
+  const adjustedBasis = eligibleBasis * basisBoost;
+  const lihtcRate = site.incentives.some(i => i.includes("9%")) ? 0.09 : 0.04;
+  const annualCredits = adjustedBasis * lihtcRate;
+  const tenYrCredits = annualCredits * 10;
+  const equityPrice = 0.92;
+  const lihtcEquity = tenYrCredits * equityPrice;
+  // Funding gap
+  const debtCoverage = noi / 1.20 / 0.065; // 1.20 DSCR @ 6.5% constant
+  const permLoan = Math.min(debtCoverage, tdc * 0.55);
+  const softLoans = tdc * 0.08;
+  const gpEquity = Math.max(0, tdc - lihtcEquity - permLoan - softLoans);
+  return {
+    buildableSF, hardCost, softCost, landCost, contingency, tdc, costPerUnit,
+    annualRentRestricted, opex, noi, yieldOnCost,
+    eligibleBasis, adjustedBasis, lihtcRate, annualCredits, tenYrCredits, lihtcEquity,
+    permLoan, softLoans, gpEquity, basisBoost
+  };
+}
+
+function filteredSites() {
+  const q = state.query.trim().toLowerCase();
+  return SITES.filter(s => {
+    if (q) {
+      const hay = [s.zip, s.city, s.state, s.county, s.addr].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    const f = state.filters;
+    if (f.lihtc && !s.incentiveFlags.lihtc) return false;
+    if (f.oz && !s.incentiveFlags.oz) return false;
+    if (f.densityBonus && !s.incentiveFlags.densityBonus) return false;
+    if (f.inclusionary && !s.incentiveFlags.inclusionary) return false;
+    if (f.qct && !s.incentiveFlags.qct) return false;
+    if (f.dda && !s.incentiveFlags.dda) return false;
+    if (f.tod && !s.incentiveFlags.tod) return false;
+    if (f.hudHome && !s.incentiveFlags.hudHome) return false;
+    if (f.liveLocal && !s.incentiveFlags.liveLocal) return false;
+    if (f.surtax && !s.incentiveFlags.surtax) return false;
+    if (f.excludeFloodAE && s.incentiveFlags.floodAE) return false;
+    if (s.askPrice > f.maxPrice) return false;
+    if (s.lotSF < f.minLotSF) return false;
+    if (f.constructionType !== "any") {
+      const has = s.constructionTypes.some(c => c.toLowerCase().includes(f.constructionType.toLowerCase()));
+      if (!has) return false;
+    }
+    return true;
+  });
+}
+
+function setState(patch) {
+  state = { ...state, ...patch };
+  render();
+}
+
+function setFilter(key, val) {
+  state.filters = { ...state.filters, [key]: val };
+  render();
+}
+
+function setPF(siteId, key, val) {
+  state.pfOverride[siteId] = { ...(state.pfOverride[siteId] || {}), [key]: val };
+  render();
+}
+
+function resetPF(siteId) {
+  delete state.pfOverride[siteId];
+  render();
+}
+
+// -------------------- COMPONENTS --------------------
+
+function Header() {
+  return `
+    <header class="panel border-b sticky top-0 z-20" style="border-color: var(--border)">
+      <div class="max-w-[1400px] mx-auto px-6 py-3 flex items-center gap-6">
+        <div class="flex items-center gap-2">
+          <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0b1220">P</div>
+          <div class="font-semibold tracking-tight">ParcelPath</div>
+          <div class="text-xs" style="color:var(--muted)">Affordable Housing · Miami-Dade, FL</div>
+        </div>
+        <div class="flex-1 max-w-2xl">
+          <div class="relative">
+            <input class="input pl-9" placeholder="Search by zip, neighborhood, or address — try '33136' or 'Little Havana'"
+              value="${state.query.replace(/"/g, '&quot;')}"
+              oninput="setState({query: this.value})" />
+            <div class="absolute left-3 top-2.5" style="color:var(--muted)">⌕</div>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center gap-3 text-xs" style="color:var(--muted)">
+          <span><span class="kbd">${filteredSites().length}</span> sites match</span>
+          <span class="kbd">v0.1 · mock data</span>
+        </div>
+      </div>
+    </header>
+  `;
+}
+
+function FilterToggle(key, label, hint) {
+  const on = state.filters[key];
+  return `
+    <label class="flex items-center justify-between py-1.5 cursor-pointer">
+      <span class="flex items-center gap-2">
+        <input type="checkbox" ${on ? "checked" : ""} onchange="setFilter('${key}', this.checked)" />
+        <span class="text-sm">${label}</span>
+      </span>
+      ${hint ? `<span class="text-[10px]" style="color:var(--muted)">${hint}</span>` : ""}
+    </label>
+  `;
+}
+
+function Sidebar() {
+  const f = state.filters;
+  return `
+    <aside class="panel rounded-lg p-4 space-y-4 scrollbar overflow-y-auto" style="max-height: calc(100vh - 110px)">
+      <div>
+        <div class="text-xs uppercase tracking-wider mb-2" style="color:var(--muted)">Housing Incentives</div>
+        ${FilterToggle("lihtc",       "LIHTC eligible",          "9% or 4%")}
+        ${FilterToggle("qct",         "Qualified Census Tract",  "QCT")}
+        ${FilterToggle("dda",         "Diff. Development Area",  "DDA")}
+        ${FilterToggle("oz",          "Opportunity Zone",        "OZ")}
+        ${FilterToggle("densityBonus","Density Bonus available", "")}
+        ${FilterToggle("inclusionary","Inclusionary program",    "")}
+        ${FilterToggle("tod",         "Transit-Oriented",        "TOD")}
+        ${FilterToggle("hudHome",     "HUD HOME-eligible",       "")}
+      </div>
+      <div class="divider"></div>
+      <div>
+        <div class="text-xs uppercase tracking-wider mb-2" style="color:var(--muted)">Florida / Miami-Dade</div>
+        ${FilterToggle("liveLocal",      "Live Local Act eligible",  "SB 102")}
+        ${FilterToggle("surtax",         "Miami-Dade Surtax",        "Doc stamp")}
+        ${FilterToggle("excludeFloodAE", "Exclude flood zone AE",    "FEMA")}
+      </div>
+      <div class="divider"></div>
+      <div>
+        <div class="text-xs uppercase tracking-wider mb-2" style="color:var(--muted)">Site Constraints</div>
+        <label class="text-xs" style="color:var(--muted)">Max asking price · <span class="num" style="color:var(--text)">${fmt$m(f.maxPrice)}</span></label>
+        <input type="range" min="350000" max="2000000" step="10000" value="${f.maxPrice}"
+          class="slider mt-1 mb-3" oninput="setFilter('maxPrice', +this.value)" />
+        <label class="text-xs" style="color:var(--muted)">Min lot size · <span class="num" style="color:var(--text)">${fmtSF(f.minLotSF)} (${acres(f.minLotSF)} ac)</span></label>
+        <input type="range" min="0" max="65000" step="1000" value="${f.minLotSF}"
+          class="slider mt-1 mb-3" oninput="setFilter('minLotSF', +this.value)" />
+        <label class="text-xs block mb-1" style="color:var(--muted)">Construction type</label>
+        <select class="select" onchange="setFilter('constructionType', this.value)">
+          <option value="any" ${f.constructionType==="any"?"selected":""}>Any</option>
+          <option value="Type V" ${f.constructionType==="Type V"?"selected":""}>Type V (wood)</option>
+          <option value="Type III" ${f.constructionType==="Type III"?"selected":""}>Type III (wood w/ noncomb. ext.)</option>
+          <option value="Type I" ${f.constructionType==="Type I"?"selected":""}>Type I (concrete/steel)</option>
+          <option value="Modular" ${f.constructionType==="Modular"?"selected":""}>Modular</option>
+          <option value="Adaptive reuse" ${f.constructionType==="Adaptive reuse"?"selected":""}>Adaptive reuse</option>
+        </select>
+      </div>
+      <div class="divider"></div>
+      <button class="btn-ghost w-full" onclick="state.filters={lihtc:false,oz:false,densityBonus:false,inclusionary:false,qct:false,dda:false,tod:false,hudHome:false,liveLocal:false,surtax:false,excludeFloodAE:false,constructionType:'any',maxPrice:2000000,minLotSF:0};render()">Reset filters</button>
+    </aside>
+  `;
+}
+
+function Map(sites) {
+  const pins = sites.map(s => {
+    const active = s.id === state.selectedId;
+    return `
+      <div class="pin" style="left:${s.lng}%; top:${s.lat}%" onclick="setState({selectedId:'${s.id}'})">
+        <div class="pin-dot ${active ? "active" : ""}" title="${s.addr}, ${s.city}"></div>
+      </div>
+    `;
+  }).join("");
+  return `
+    <div class="panel rounded-lg overflow-hidden">
+      <div class="px-4 py-2 flex items-center justify-between border-b" style="border-color:var(--border)">
+        <div class="text-sm font-medium">Map · Miami-Dade County, FL</div>
+        <div class="text-[11px]" style="color:var(--muted)">${sites.length} sites · click pin to inspect · schematic — N up, Biscayne Bay right</div>
+      </div>
+      <div class="map-bg relative" style="height: 280px;">
+        ${pins}
+        <div class="absolute bottom-2 left-3 text-[10px]" style="color:var(--muted)">▼ Schematic — not to scale</div>
+      </div>
+    </div>
+  `;
+}
+
+function siteCard(s) {
+  const pf = computePF(s);
+  const flags = s.incentiveFlags;
+  const badges = [];
+  if (flags.lihtc) badges.push(`<span class="chip chip-accent">LIHTC</span>`);
+  if (flags.qct) badges.push(`<span class="chip chip-good">QCT</span>`);
+  if (flags.dda) badges.push(`<span class="chip chip-good">DDA</span>`);
+  if (flags.oz) badges.push(`<span class="chip chip-indigo">OZ</span>`);
+  if (flags.liveLocal) badges.push(`<span class="chip chip-warn">Live Local</span>`);
+  if (flags.densityBonus) badges.push(`<span class="chip">Density Bonus</span>`);
+  if (flags.tod) badges.push(`<span class="chip">TOD</span>`);
+  if (flags.inclusionary) badges.push(`<span class="chip">IZ</span>`);
+  if (flags.surtax) badges.push(`<span class="chip">Surtax</span>`);
+  if (flags.floodAE) badges.push(`<span class="chip" style="color:#fbbf24;border-color:#fbbf24">⚠ Flood AE</span>`);
+  const active = s.id === state.selectedId;
+  return `
+    <div class="site-card panel rounded-lg p-4 ${active ? "ring-2" : ""}"
+      style="${active ? "border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)" : ""}"
+      onclick="setState({selectedId:'${s.id}'})">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="font-semibold">${s.addr}</div>
+          <div class="text-xs" style="color:var(--muted)">${s.city}, ${s.state} ${s.zip} · ${s.county}</div>
+        </div>
+        <div class="text-2xl">${s.photo}</div>
+      </div>
+      <div class="grid grid-cols-3 gap-2 mt-3 text-xs">
+        <div><div style="color:var(--muted)">Lot</div><div class="num font-medium">${acres(s.lotSF)} ac</div></div>
+        <div><div style="color:var(--muted)">Ask</div><div class="num font-medium">${fmt$k(s.askPrice)}</div></div>
+        <div><div style="color:var(--muted)">$/SF</div><div class="num font-medium">$${(s.askPrice/s.lotSF).toFixed(0)}</div></div>
+        <div><div style="color:var(--muted)">Zoning</div><div class="font-medium">${s.zoning.code}</div></div>
+        <div><div style="color:var(--muted)">Units (proj.)</div><div class="num font-medium">${getPF(s).units}</div></div>
+        <div><div style="color:var(--muted)">YoC</div><div class="num font-medium" style="color:${pf.yieldOnCost>=0.06?'var(--good)':pf.yieldOnCost>=0.045?'var(--warn)':'var(--danger)'}">${fmtPct(pf.yieldOnCost)}</div></div>
+      </div>
+      <div class="flex flex-wrap gap-1 mt-3">${badges.join("")}</div>
+    </div>
+  `;
+}
+
+function Results(sites) {
+  if (!sites.length) {
+    return `<div class="panel rounded-lg p-8 text-center" style="color:var(--muted)">No sites match those filters. Try widening price range or clearing incentive filters.</div>`;
+  }
+  return `<div class="grid grid-cols-1 lg:grid-cols-2 gap-3">${sites.map(siteCard).join("")}</div>`;
+}
+
+function Detail(s) {
+  if (!s) {
+    return `
+      <div class="panel rounded-lg p-8 text-center" style="color:var(--muted)">
+        Select a site from the map or list to see zoning, permits, construction, and a back-of-envelope pro-forma.
+      </div>
+    `;
+  }
+  const pf = computePF(s);
+  const inputs = getPF(s);
+  const fundingPct = {
+    lihtc: pf.lihtcEquity / pf.tdc,
+    perm: pf.permLoan / pf.tdc,
+    soft: pf.softLoans / pf.tdc,
+    gp:   pf.gpEquity / pf.tdc,
+  };
+
+  return `
+    <div class="panel rounded-lg overflow-hidden">
+      <div class="p-4 border-b flex items-start justify-between" style="border-color:var(--border)">
+        <div>
+          <div class="text-xs uppercase tracking-wider" style="color:var(--muted)">Site Detail</div>
+          <div class="text-lg font-semibold mt-1">${s.addr}</div>
+          <div class="text-sm" style="color:var(--muted)">${s.city}, ${s.state} ${s.zip} · ${s.county}</div>
+        </div>
+        <button class="btn-ghost text-xs" onclick="setState({selectedId:null})">Close</button>
+      </div>
+
+      <div class="p-4 space-y-5">
+        <!-- Summary row -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div class="panel-2 rounded-lg p-3"><div class="text-[11px]" style="color:var(--muted)">Lot</div><div class="num font-semibold">${fmtSF(s.lotSF)}<div class="text-[11px] font-normal" style="color:var(--muted)">${acres(s.lotSF)} ac</div></div></div>
+          <div class="panel-2 rounded-lg p-3"><div class="text-[11px]" style="color:var(--muted)">Asking</div><div class="num font-semibold">${fmt$(s.askPrice)}</div><div class="text-[11px]" style="color:var(--muted)">$${(s.askPrice/s.lotSF).toFixed(0)}/SF land</div></div>
+          <div class="panel-2 rounded-lg p-3"><div class="text-[11px]" style="color:var(--muted)">Current Use</div><div class="text-sm font-medium">${s.currentUse}</div></div>
+          <div class="panel-2 rounded-lg p-3"><div class="text-[11px]" style="color:var(--muted)">By-right units</div><div class="num font-semibold">${Math.round((s.lotSF/43560) * s.zoning.maxUnitsAcre)}</div><div class="text-[11px]" style="color:var(--muted)">${s.zoning.maxUnitsAcre}/ac</div></div>
+          <div class="panel-2 rounded-lg p-3"><div class="text-[11px]" style="color:var(--muted)">Max Height</div><div class="num font-semibold">${s.zoning.maxHeight}'</div><div class="text-[11px]" style="color:var(--muted)">FAR ${s.zoning.far}</div></div>
+        </div>
+
+        <!-- Zoning -->
+        <section>
+          <h3 class="text-sm font-semibold mb-2 flex items-center gap-2">📐 Zoning · <span class="chip">${s.zoning.code}</span></h3>
+          <div class="panel-2 rounded-lg p-3 text-sm">
+            <div class="font-medium">${s.zoning.name}</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 text-xs">
+              <div><div style="color:var(--muted)">FAR</div><div class="num">${s.zoning.far}</div></div>
+              <div><div style="color:var(--muted)">Max height</div><div class="num">${s.zoning.maxHeight}'</div></div>
+              <div><div style="color:var(--muted)">Density</div><div class="num">${s.zoning.maxUnitsAcre} units/ac</div></div>
+              <div><div style="color:var(--muted)">Parking min</div><div class="num">${s.zoning.minParking}/unit</div></div>
+              <div class="col-span-2 md:col-span-4"><div style="color:var(--muted)">Setbacks (front/side/rear)</div><div>${s.zoning.setbacks}</div></div>
+            </div>
+            <div class="mt-3 text-xs">
+              <div style="color:var(--muted)">Allowed uses</div>
+              <div>${s.allowedUses.join(" · ")}</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Construction -->
+        <section>
+          <h3 class="text-sm font-semibold mb-2">🏗️ Allowed Construction Types</h3>
+          <div class="flex flex-wrap gap-2">
+            ${s.constructionTypes.map(c => `<span class="chip">${c}</span>`).join("")}
+          </div>
+        </section>
+
+        <!-- Permits -->
+        <section>
+          <h3 class="text-sm font-semibold mb-2">📋 Permits & Approvals</h3>
+          <div class="panel-2 rounded-lg overflow-hidden">
+            <table class="w-full text-xs">
+              <thead><tr style="color:var(--muted)">
+                <th class="text-left p-2">Permit / Approval</th>
+                <th class="text-left p-2">Timeline</th>
+                <th class="text-right p-2">Est. fee</th>
+                <th class="text-left p-2">Required?</th>
+              </tr></thead>
+              <tbody>
+                ${s.permits.map(p => `
+                  <tr style="border-top:1px solid var(--border)">
+                    <td class="p-2">
+                      <div class="font-medium">${p.name}</div>
+                      ${p.note ? `<div class="text-[11px]" style="color:var(--muted)">${p.note}</div>` : ""}
+                    </td>
+                    <td class="p-2">${p.time}</td>
+                    <td class="p-2 text-right num">${fmt$(p.cost)}</td>
+                    <td class="p-2">${p.required ? `<span class="chip chip-warn">Required</span>` : `<span class="chip">Optional</span>`}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Incentives -->
+        <section>
+          <h3 class="text-sm font-semibold mb-2">💰 Applicable Incentives</h3>
+          <div class="flex flex-wrap gap-2">
+            ${s.incentives.map(i => `<span class="chip chip-accent">${i}</span>`).join("")}
+          </div>
+          ${s.incentiveFlags.qct || s.incentiveFlags.dda ? `<div class="text-xs mt-2" style="color:var(--good)">✓ 130% LIHTC basis boost applies (QCT/DDA designation)</div>` : ""}
+          ${s.incentiveFlags.liveLocal ? `<div class="text-xs mt-1" style="color:var(--warn)">✦ Live Local Act (FL SB 102): unlocks highest-allowed density + height within 1-mile radius, reduced parking, and 75% ad-valorem exemption — if ≥40% of units restricted ≤120% AMI for 30 years.</div>` : ""}
+          ${s.incentiveFlags.floodAE ? `<div class="text-xs mt-1" style="color:var(--danger)">⚠ FEMA Flood Zone AE — base flood elevation +1' freeboard required; ground floor not viable for residential; podium typology assumed.</div>` : ""}
+        </section>
+
+        <!-- Notes -->
+        <section>
+          <h3 class="text-sm font-semibold mb-2">📝 Notes</h3>
+          <div class="panel-2 rounded-lg p-3 text-sm">${s.notes}</div>
+        </section>
+
+        <!-- Pro-forma -->
+        <section>
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-semibold">📊 Quick Pro-Forma (back-of-envelope)</h3>
+            <button class="btn-ghost text-xs" onclick="resetPF('${s.id}')">Reset inputs</button>
+          </div>
+          <div class="panel-2 rounded-lg p-4 space-y-4">
+            <!-- Inputs -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+              <label class="block">
+                <div style="color:var(--muted)">Units</div>
+                <input class="input num text-right" value="${inputs.units}" type="number"
+                  onchange="setPF('${s.id}', 'units', +this.value)" />
+              </label>
+              <label class="block">
+                <div style="color:var(--muted)">Avg unit SF</div>
+                <input class="input num text-right" value="${inputs.avgUnitSF}" type="number"
+                  onchange="setPF('${s.id}', 'avgUnitSF', +this.value)" />
+              </label>
+              <label class="block">
+                <div style="color:var(--muted)">Hard cost $/SF</div>
+                <input class="input num text-right" value="${inputs.hardCostSF}" type="number"
+                  onchange="setPF('${s.id}', 'hardCostSF', +this.value)" />
+              </label>
+              <label class="block">
+                <div style="color:var(--muted)">Restricted rent $/mo</div>
+                <input class="input num text-right" value="${inputs.monthlyRentRestricted}" type="number"
+                  onchange="setPF('${s.id}', 'monthlyRentRestricted', +this.value)" />
+              </label>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Uses -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div class="text-xs uppercase tracking-wider mb-2" style="color:var(--muted)">Uses (Total Development Cost)</div>
+                <div class="space-y-1 text-sm">
+                  <div class="flex justify-between"><span>Land</span><span class="num">${fmt$(pf.landCost)}</span></div>
+                  <div class="flex justify-between"><span>Hard cost · ${fmtNum(pf.buildableSF)} GSF × $${inputs.hardCostSF}</span><span class="num">${fmt$(pf.hardCost)}</span></div>
+                  <div class="flex justify-between"><span>Soft cost (22%)</span><span class="num">${fmt$(pf.softCost)}</span></div>
+                  <div class="flex justify-between"><span>Contingency (5%)</span><span class="num">${fmt$(pf.contingency)}</span></div>
+                  <div class="flex justify-between font-semibold pt-1 mt-1" style="border-top:1px solid var(--border)">
+                    <span>Total Development Cost</span><span class="num">${fmt$(pf.tdc)}</span>
+                  </div>
+                  <div class="flex justify-between text-xs" style="color:var(--muted)">
+                    <span>$/unit</span><span class="num">${fmt$(pf.costPerUnit)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sources -->
+              <div>
+                <div class="text-xs uppercase tracking-wider mb-2" style="color:var(--muted)">Sources (Capital Stack)</div>
+                <div class="space-y-2 text-sm">
+                  <div>
+                    <div class="flex justify-between"><span>LIHTC equity · ${(pf.lihtcRate*100).toFixed(0)}% @ ${pf.basisBoost===1.3?"130% boost":"100%"}</span><span class="num">${fmt$(pf.lihtcEquity)}</span></div>
+                    <div class="bar mt-1"><span style="width:${(fundingPct.lihtc*100).toFixed(1)}%"></span></div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between"><span>Perm loan (1.20 DSCR @ 6.5%)</span><span class="num">${fmt$(pf.permLoan)}</span></div>
+                    <div class="bar mt-1"><span style="width:${(fundingPct.perm*100).toFixed(1)}%"></span></div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between"><span>Soft loans (HOME, AHTF, TIF)</span><span class="num">${fmt$(pf.softLoans)}</span></div>
+                    <div class="bar mt-1"><span style="width:${(fundingPct.soft*100).toFixed(1)}%"></span></div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between"><span>GP equity / funding gap</span><span class="num" style="color:${pf.gpEquity>pf.tdc*0.1?'var(--warn)':'var(--good)'}">${fmt$(pf.gpEquity)}</span></div>
+                    <div class="bar mt-1"><span style="width:${(fundingPct.gp*100).toFixed(1)}%"></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Returns -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <div class="text-[11px]" style="color:var(--muted)">Gross Rent (restricted)</div>
+                <div class="num font-semibold">${fmt$(pf.annualRentRestricted)}<span class="text-[11px] font-normal" style="color:var(--muted)"> /yr</span></div>
+              </div>
+              <div>
+                <div class="text-[11px]" style="color:var(--muted)">NOI (yr 1 stabilized)</div>
+                <div class="num font-semibold">${fmt$(pf.noi)}</div>
+              </div>
+              <div>
+                <div class="text-[11px]" style="color:var(--muted)">Yield-on-Cost</div>
+                <div class="num font-semibold" style="color:${pf.yieldOnCost>=0.06?'var(--good)':pf.yieldOnCost>=0.045?'var(--warn)':'var(--danger)'}">${fmtPct(pf.yieldOnCost)}</div>
+              </div>
+              <div>
+                <div class="text-[11px]" style="color:var(--muted)">10-yr LIHTC Credits</div>
+                <div class="num font-semibold">${fmt$(pf.tenYrCredits)}</div>
+              </div>
+            </div>
+
+            <div class="text-[11px]" style="color:var(--muted)">
+              <strong>Method:</strong> Buildable GSF = units × avg unit SF × 1.18 (loss factor). TDC = land + hard + 22% soft + 5% contingency.
+              Restricted rent at ${inputs.amiTarget}% AMI assumed for stabilized year. Perm loan sized to lesser of 1.20 DSCR @ 6.5% or 55% LTC.
+              LIHTC equity = 10-yr credits × $0.92/credit. Numbers are sketch-level — confirm against state QAP, local fee schedules, and current GC pricing.
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  `;
+}
+
+// -------------------- ROOT --------------------
+function render() {
+  const sites = filteredSites();
+  const selected = SITES.find(s => s.id === state.selectedId) || null;
+  document.getElementById("app").innerHTML = `
+    ${Header()}
+    <main class="max-w-[1400px] mx-auto px-6 py-4 grid grid-cols-12 gap-4">
+      <div class="col-span-12 lg:col-span-3">${Sidebar()}</div>
+      <div class="col-span-12 lg:col-span-9 space-y-4">
+        ${Map(sites)}
+        ${selected ? Detail(selected) : Results(sites)}
+        ${selected ? `<div class="text-xs text-center" style="color:var(--muted)">— Back to all matches —</div>${Results(sites)}` : ""}
+      </div>
+    </main>
+    <footer class="max-w-[1400px] mx-auto px-6 py-6 text-[11px]" style="color:var(--muted)">
+      ParcelPath prototype · Mock data for 10 representative Miami-Dade sites · Production version would pull parcels from Miami-Dade Property Appraiser + Regrid,
+      Miami 21 zoning from the City of Miami GIS, QCT/DDA from HUD, OZ from CDFI Fund, FEMA flood layers, and rents from HUD FMR + CoStar. Live Local Act preemption analysis would
+      cross-reference highest-allowed density/height within a 1-mile radius. Pro-forma logic is intentionally simple — first-pass screening, not investment-committee material.
+      Hurricane-code (FBC HVHZ) construction premiums are baked into hard-cost assumptions.
+    </footer>
+  `;
+}
+
+// Expose helpers globally for inline event handlers
+window.setState = setState;
+window.setFilter = setFilter;
+window.setPF = setPF;
+window.resetPF = resetPF;
+window.render = render;
+
+// Initial render
+render();
+</script>
+</body>
+</html>
