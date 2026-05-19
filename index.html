@@ -3,85 +3,316 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ParcelPath — Affordable Housing Site Sourcing</title>
+<title>ParcelPath — Miami-Dade Affordable Housing Sourcing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   :root {
-    --bg: #0b1220;
-    --panel: #111a2e;
-    --panel-2: #1a2540;
-    --border: #243150;
-    --text: #e6ecf5;
-    --muted: #8a99b8;
-    --accent: #5eead4;
-    --accent-2: #818cf8;
-    --warn: #fbbf24;
+    --bg-0: #070b16;
+    --bg-1: #0b1124;
+    --bg-2: #111933;
+    --panel:  #131c38;
+    --panel-2:#1a2548;
+    --border: #243160;
+    --border-soft: #1d2750;
+    --text:   #ecf0fb;
+    --text-2: #c2cae0;
+    --muted:  #7a87ab;
+    --muted-2:#5d6c92;
+    --teal:   #5eead4;
+    --teal-2: #2dd4bf;
+    --aqua:   #67e8f9;
+    --indigo: #818cf8;
+    --coral:  #fb923c;
+    --rose:   #fb7185;
+    --amber:  #fbbf24;
+    --good:   #34d399;
     --danger: #f87171;
-    --good: #34d399;
+    --gold:   #d4a574;
   }
-  html, body { background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .panel { background: var(--panel); border: 1px solid var(--border); }
-  .panel-2 { background: var(--panel-2); border: 1px solid var(--border); }
-  .chip { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:9999px; font-size:11px; font-weight:600; border:1px solid var(--border); background:#111a2e; color: var(--muted); }
-  .chip-good { color:#0b1220; background: var(--good); border-color: var(--good); }
-  .chip-accent { color:#0b1220; background: var(--accent); border-color: var(--accent); }
-  .chip-indigo { color:#0b1220; background: var(--accent-2); border-color: var(--accent-2); }
-  .chip-warn { color:#0b1220; background: var(--warn); border-color: var(--warn); }
-  .input, .select { background:#0b1220; border:1px solid var(--border); color: var(--text); border-radius:8px; padding:8px 10px; font-size:13px; width:100%; }
-  .input:focus, .select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(94,234,212,.15); }
-  .btn { background: var(--accent); color:#0b1220; font-weight:600; border-radius:8px; padding:8px 12px; font-size:13px; }
-  .btn:hover { filter: brightness(1.05); }
-  .btn-ghost { background: transparent; color: var(--text); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; }
-  .btn-ghost:hover { background: var(--panel-2); }
-  .site-card { transition: transform .12s ease, border-color .12s ease; }
-  .site-card:hover { transform: translateY(-1px); border-color: var(--accent); cursor: pointer; }
-  .map-bg { background:
-    radial-gradient(circle at 20% 30%, rgba(94,234,212,.10), transparent 40%),
-    radial-gradient(circle at 70% 60%, rgba(129,140,248,.10), transparent 40%),
-    repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 40px),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 1px, transparent 1px 40px),
-    #0b1220;
+  * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html, body {
+    background: var(--bg-0);
+    color: var(--text);
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv02","cv03","cv04","cv11";
+    letter-spacing: -0.005em;
   }
+  body {
+    background:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(94,234,212,0.08), transparent 60%),
+      radial-gradient(ellipse 70% 50% at 80% -10%, rgba(251,146,60,0.06), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(129,140,248,0.05), transparent 60%),
+      var(--bg-0);
+    min-height: 100vh;
+  }
+  .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; letter-spacing: -0.02em; }
+  .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+  .panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent), var(--panel);
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+  }
+  .panel-2 {
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+  }
+  .panel-glass {
+    background: linear-gradient(180deg, rgba(20,28,55,0.92), rgba(11,17,36,0.92));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-soft);
+  }
+  .divider { height:1px; background: var(--border-soft); }
+
+  .chip { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:9999px; font-size:11px; font-weight:600; border:1px solid var(--border); background: rgba(255,255,255,0.02); color: var(--text-2); letter-spacing: 0.01em; }
+  .chip-teal   { color:#062a26; background: linear-gradient(135deg, #5eead4, #2dd4bf); border-color: transparent; }
+  .chip-good   { color:#053428; background: linear-gradient(135deg, #34d399, #10b981); border-color: transparent; }
+  .chip-indigo { color:#1a1640; background: linear-gradient(135deg, #a5b4fc, #818cf8); border-color: transparent; }
+  .chip-amber  { color:#3b2a08; background: linear-gradient(135deg, #fde68a, #fbbf24); border-color: transparent; }
+  .chip-coral  { color:#3a1c08; background: linear-gradient(135deg, #fdba74, #fb923c); border-color: transparent; }
+  .chip-warn   { color: var(--amber); border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.06); }
+  .chip-danger { color: var(--danger); border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.06); }
+
+  .input, .select {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-soft);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 13px;
+    width: 100%;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .input:focus, .select:focus {
+    outline: none;
+    border-color: var(--teal);
+    background: rgba(94,234,212,0.04);
+    box-shadow: 0 0 0 3px rgba(94,234,212,0.12);
+  }
+  .input::placeholder { color: var(--muted-2); }
+
+  .btn {
+    background: linear-gradient(135deg, var(--teal), var(--teal-2));
+    color: #062a26;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 13px;
+    transition: filter .12s ease, transform .12s ease;
+  }
+  .btn:hover { filter: brightness(1.06); transform: translateY(-0.5px); }
+  .btn-ghost {
+    background: rgba(255,255,255,0.02);
+    color: var(--text);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+    transition: border-color .12s ease, background .12s ease;
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.05); border-color: var(--border); }
+  .btn-icon {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-soft);
+    color: var(--text-2);
+    transition: background .12s ease, color .12s ease;
+  }
+  .btn-icon:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+
+  .slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 4px;
+    background: var(--border-soft); border-radius: 4px;
+  }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal), var(--teal-2));
+    border: 2px solid var(--bg-1);
+    box-shadow: 0 2px 8px rgba(94,234,212,0.35);
+    cursor: pointer;
+  }
+  .slider::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--teal); border: 2px solid var(--bg-1); cursor: pointer;
+  }
+
+  .bar { background: rgba(255,255,255,0.04); height: 8px; border-radius: 9999px; overflow: hidden; display:flex; }
+  .bar > span { display: block; height: 100%; }
+
+  .site-card {
+    transition: transform .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .site-card::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at top right, rgba(94,234,212,0.06), transparent 50%);
+    opacity: 0; transition: opacity .2s ease;
+    pointer-events: none;
+  }
+  .site-card:hover::before { opacity: 1; }
+  .site-card:hover { transform: translateY(-2px); border-color: var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+  .site-card.active {
+    border-color: var(--teal) !important;
+    box-shadow: 0 0 0 1px var(--teal), 0 8px 24px rgba(94,234,212,0.18);
+  }
+  .site-card.active::before { opacity: 1; }
+
+  .map-container { position: relative; }
+  .map-pin { cursor: pointer; transition: transform .15s ease; }
+  .map-pin:hover { transform: scale(1.15); transform-origin: center; }
+  .map-pin .pin-ring { animation: pulse 2.4s ease-out infinite; transform-origin: center; }
+  @keyframes pulse {
+    0%   { r: 6;  opacity: 0.55; }
+    100% { r: 16; opacity: 0; }
+  }
+
+  .tooltip {
+    position: absolute; pointer-events: none;
+    background: rgba(7,11,22,0.96);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px; border-radius: 8px;
+    font-size: 11px; line-height: 1.45;
+    transform: translate(-50%, -115%);
+    white-space: nowrap;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.5);
+    z-index: 10;
+  }
+
   .scrollbar::-webkit-scrollbar { width: 8px; }
-  .scrollbar::-webkit-scrollbar-thumb { background: #243150; border-radius: 8px; }
-  .pin { position:absolute; transform: translate(-50%, -50%); }
-  .pin-dot { width:14px; height:14px; border-radius:50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(94,234,212,.25); border:2px solid #0b1220; cursor:pointer; }
-  .pin-dot.active { background: var(--accent-2); box-shadow: 0 0 0 6px rgba(129,140,248,.3); }
-  .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; background:#0b1220; border:1px solid var(--border); padding: 1px 6px; border-radius:4px; color: var(--muted); }
-  .divider { height:1px; background: var(--border); }
-  .num { font-variant-numeric: tabular-nums; }
-  details > summary { list-style: none; cursor: pointer; }
-  details > summary::-webkit-details-marker { display: none; }
-  .grow-input { background: transparent; border: none; color: var(--text); width: 90px; text-align:right; font-variant-numeric: tabular-nums; }
-  .grow-input:focus { outline: none; }
-  .slider { -webkit-appearance:none; appearance:none; width:100%; height:4px; background: var(--border); border-radius:4px; }
-  .slider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:14px; height:14px; border-radius:50%; background: var(--accent); cursor:pointer; }
-  .bar { background: var(--panel-2); height: 8px; border-radius: 9999px; overflow:hidden; }
-  .bar > span { display:block; height:100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+  .scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+  .scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+  .dotgrid {
+    background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+
+  .h-section { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.01em; color: var(--text); margin-bottom: 10px; }
+  .h-section .icon { color: var(--teal); display: inline-flex; }
+  .label-eyebrow { font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+  .stat-tile {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent), var(--panel-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .stat-tile .stat-num { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; font-family: 'Space Grotesk', 'Inter', sans-serif; }
+
+  .nice-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+  .nice-table th { text-align: left; padding: 9px 12px; color: var(--muted); font-weight: 500; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid var(--border-soft); }
+  .nice-table td { padding: 11px 12px; border-bottom: 1px solid var(--border-soft); }
+  .nice-table tr:last-child td { border-bottom: none; }
+
+  .gauge-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 10; stroke-linecap: round; }
+
+  .filter-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 9px 4px 11px; border-radius: 9999px;
+    background: rgba(94,234,212,0.10);
+    border: 1px solid rgba(94,234,212,0.25);
+    color: var(--teal);
+    font-size: 11.5px; font-weight: 600;
+  }
+  .filter-chip button {
+    width: 14px; height: 14px; border-radius: 9999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(94,234,212,0.15);
+    color: var(--teal);
+    font-size: 10px;
+    line-height: 1;
+    transition: background .12s ease;
+  }
+  .filter-chip button:hover { background: rgba(94,234,212,0.3); color: white; }
+
+  .fade-in { animation: fadeIn .2s ease-out both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(2px);} to { opacity: 1; transform:none; } }
+
+  .pf-input-group { display: flex; flex-direction: column; gap: 4px; }
+  .pf-input-group label { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+  .cbox {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative;
+    transition: border-color .12s ease, background .12s ease;
+    flex-shrink: 0;
+  }
+  .cbox:hover { border-color: var(--teal); }
+  .cbox:checked {
+    background: linear-gradient(135deg, var(--teal), var(--teal-2));
+    border-color: var(--teal);
+  }
+  .cbox:checked::after {
+    content: ""; position: absolute;
+    left: 4px; top: 0.5px;
+    width: 5px; height: 9px;
+    border: solid #062a26;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .kv { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 12.5px; }
+  .kv .k { color: var(--muted); }
+  .kv .v { color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+  .accent-text { background: linear-gradient(135deg, var(--teal), var(--aqua)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 </style>
 </head>
 <body>
 <div id="app"></div>
 
 <script>
-/* =========================================================
-   ParcelPath — single-file prototype
-   Affordable-housing site sourcing, mock data
-   ========================================================= */
+/* ===========================================================
+   ParcelPath v0.2 — UI overhaul
+   Miami-Dade affordable housing sourcing prototype
+   =========================================================== */
+
+const ICON = {
+  logo: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-12a7 7 0 1 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
+  search: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`,
+  map: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15"/><path d="M15 6v15"/></svg>`,
+  sliders: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg>`,
+  ruler: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 8.7 8.7 21.3a2.4 2.4 0 0 1-3.4 0L2.7 18.7a2.4 2.4 0 0 1 0-3.4L15.3 2.7a2.4 2.4 0 0 1 3.4 0l2.6 2.6a2.4 2.4 0 0 1 0 3.4z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg>`,
+  hammer: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.5 8.5a2.12 2.12 0 1 1-3-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 0 0-3.94-1.64H9l.92.82A6.18 6.18 0 0 1 12 8.4v1.56l2 2h2.47l2.26 1.91"/></svg>`,
+  file: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>`,
+  coin: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9.5C9 8.12 10.34 7 12 7s3 1.12 3 2.5S13.66 12 12 12s-3 1.12-3 2.5S10.34 17 12 17s3-1.12 3-2.5"/><path d="M12 5v2"/><path d="M12 17v2"/></svg>`,
+  chart: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>`,
+  pin: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-12a7 7 0 1 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
+  note: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`,
+  warn: `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`,
+  spark: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8L4 12l6.1 3.2L12 21l1.9-5.8L20 12l-6.1-3.2z"/></svg>`,
+  check: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  close: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  refresh: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>`,
+};
 
 // -------------------- MOCK DATA --------------------
-// All 10 sites in Miami-Dade County, FL. Map coords laid out roughly:
-//   N (Aventura) → top, S (Cutler Bay) → bottom, E (Beach/Biscayne) → right,
-//   W (Hialeah/Doral) → left, Downtown/Brickell → center-right.
 const SITES = [
   {
     id: "mia-33136-001",
     addr: "1428 NW 3rd Ave",
     city: "Miami", state: "FL", zip: "33136", county: "Miami-Dade County",
-    lat: 50, lng: 70, // Overtown — central, just NW of downtown
+    neighborhood: "Overtown",
+    sx: 430, sy: 213,
     lotSF: 18000,
     askPrice: 1450000,
-    photo: "🏙️",
     currentUse: "Vacant lot + small contractor yard",
     zoning: { code: "T6-8-O", name: "Urban Core Transect — 8 stories, Open", far: 5.0, maxHeight: 95, maxUnitsAcre: 150, minParking: 1.5, setbacks: "10'/0'/10' (build-to)" },
     allowedUses: ["Multifamily", "Mixed-use w/ ground retail", "Lodging", "Live-work"],
@@ -101,10 +332,10 @@ const SITES = [
     id: "mia-33135-002",
     addr: "1240 SW 8th St (Calle Ocho)",
     city: "Miami", state: "FL", zip: "33135", county: "Miami-Dade County",
-    lat: 58, lng: 62,
+    neighborhood: "Little Havana",
+    sx: 410, sy: 240,
     lotSF: 12500,
     askPrice: 1250000,
-    photo: "🌴",
     currentUse: "Single-story retail (vacated bodega + parking)",
     zoning: { code: "T5-O", name: "Urban Center Transect — Open", far: 3.0, maxHeight: 70, maxUnitsAcre: 65, minParking: 1.5, setbacks: "10'/0'/10'" },
     allowedUses: ["Multifamily", "Mixed-use", "Restaurants", "Live-work"],
@@ -124,10 +355,10 @@ const SITES = [
     id: "mia-33142-003",
     addr: "6234 NW 17th Ave",
     city: "Miami", state: "FL", zip: "33142", county: "Miami-Dade County",
-    lat: 38, lng: 52, // Liberty City
+    neighborhood: "Liberty City",
+    sx: 400, sy: 180,
     lotSF: 22500,
     askPrice: 580000,
-    photo: "🏘️",
     currentUse: "3 demolished SFR lots, slab partial",
     zoning: { code: "T4-L", name: "General Urban Transect — Limited", far: 1.5, maxHeight: 50, maxUnitsAcre: 36, minParking: 1.0, setbacks: "20'/5'/10'" },
     allowedUses: ["Multifamily up to 12 units/structure", "Townhouse", "Live-work"],
@@ -147,10 +378,10 @@ const SITES = [
     id: "mia-33138-004",
     addr: "5921 NE 2nd Ave",
     city: "Miami", state: "FL", zip: "33138", county: "Miami-Dade County",
-    lat: 32, lng: 68, // Little Haiti
+    neighborhood: "Little Haiti",
+    sx: 435, sy: 168,
     lotSF: 14500,
     askPrice: 920000,
-    photo: "🎨",
     currentUse: "Vacant — former gas station (Phase II remediation done)",
     zoning: { code: "T4-O", name: "General Urban Transect — Open", far: 1.5, maxHeight: 50, maxUnitsAcre: 36, minParking: 1.0, setbacks: "10'/0'/10'" },
     allowedUses: ["Multifamily", "Mixed-use", "Live-work", "Cultural/arts"],
@@ -170,10 +401,10 @@ const SITES = [
     id: "mia-33125-005",
     addr: "1812 NW 36th St",
     city: "Miami", state: "FL", zip: "33125", county: "Miami-Dade County",
-    lat: 48, lng: 58, // Allapattah
+    neighborhood: "Allapattah",
+    sx: 410, sy: 200,
     lotSF: 15000,
     askPrice: 980000,
-    photo: "🏗️",
     currentUse: "Industrial warehouse (vacant, structurally sound)",
     zoning: { code: "T5-L", name: "Urban Center Transect — Limited", far: 3.0, maxHeight: 70, maxUnitsAcre: 65, minParking: 1.5, setbacks: "10'/5'/10'" },
     allowedUses: ["Multifamily", "Mixed-use", "Adaptive reuse", "Live-work"],
@@ -192,10 +423,10 @@ const SITES = [
     id: "mia-33127-006",
     addr: "245 NW 26th St",
     city: "Miami", state: "FL", zip: "33127", county: "Miami-Dade County",
-    lat: 44, lng: 67, // Wynwood
+    neighborhood: "Wynwood",
+    sx: 440, sy: 195,
     lotSF: 11200,
     askPrice: 1950000,
-    photo: "🎭",
     currentUse: "Surface parking + 1-story retail",
     zoning: { code: "NRD-1", name: "Wynwood Neighborhood Revitalization District", far: 3.5, maxHeight: 84, maxUnitsAcre: 150, minParking: 1.0, setbacks: "10'/0'/10' (build-to)" },
     allowedUses: ["Multifamily", "Mixed-use", "Lodging", "Studio/maker", "Galleries"],
@@ -215,10 +446,10 @@ const SITES = [
     id: "mia-33142-007",
     addr: "5314 NW 27th Ave",
     city: "Miami", state: "FL", zip: "33142", county: "Miami-Dade County",
-    lat: 40, lng: 45, // Brownsville
+    neighborhood: "Brownsville",
+    sx: 380, sy: 178,
     lotSF: 26000,
     askPrice: 450000,
-    photo: "🚉",
     currentUse: "Vacant — Miami-Dade Public Housing land bank parcel",
     zoning: { code: "T4-R", name: "General Urban Transect — Restricted", far: 1.5, maxHeight: 50, maxUnitsAcre: 36, minParking: 1.0, setbacks: "20'/5'/10'" },
     allowedUses: ["Multifamily", "Townhouse", "Senior housing"],
@@ -238,10 +469,10 @@ const SITES = [
     id: "mia-33147-008",
     addr: "8401 NW 17th Ave",
     city: "Miami", state: "FL", zip: "33147", county: "Miami-Dade County",
-    lat: 28, lng: 48, // West Little River (unincorporated Miami-Dade)
+    neighborhood: "West Little River",
+    sx: 390, sy: 145,
     lotSF: 19800,
     askPrice: 390000,
-    photo: "🏚️",
     currentUse: "Vacant lot + boarded SFR",
     zoning: { code: "RU-TH (Miami-Dade)", name: "Residential — Townhouse District (Miami-Dade UDB)", far: 0.8, maxHeight: 40, maxUnitsAcre: 27, minParking: 1.0, setbacks: "15'/5'/10'" },
     allowedUses: ["Townhouse", "Multifamily (small)", "Live-work"],
@@ -260,10 +491,10 @@ const SITES = [
     id: "mia-33133-009",
     addr: "3540 Grand Ave",
     city: "Miami", state: "FL", zip: "33133", county: "Miami-Dade County",
-    lat: 72, lng: 65, // West Grove (Coconut Grove West)
+    neighborhood: "West Grove",
+    sx: 415, sy: 290,
     lotSF: 8500,
     askPrice: 1100000,
-    photo: "🌳",
     currentUse: "Boarded SFR (historic Bahamian Village context)",
     zoning: { code: "T4-L (West Grove Overlay)", name: "General Urban + West Grove Special Area Plan", far: 1.5, maxHeight: 45, maxUnitsAcre: 36, minParking: 1.0, setbacks: "10'/5'/10'" },
     allowedUses: ["Multifamily", "Townhouse", "Live-work", "Community uses"],
@@ -283,10 +514,10 @@ const SITES = [
     id: "mdc-33161-010",
     addr: "13525 NE 6th Ave",
     city: "North Miami", state: "FL", zip: "33161", county: "Miami-Dade County",
-    lat: 18, lng: 72, // North Miami
+    neighborhood: "North Miami",
+    sx: 440, sy: 115,
     lotSF: 32000,
     askPrice: 680000,
-    photo: "🌊",
     currentUse: "Vacant commercial strip (demolished)",
     zoning: { code: "B-2 / MU-1 (North Miami)", name: "North Miami Mixed-Use Corridor", far: 2.0, maxHeight: 60, maxUnitsAcre: 80, minParking: 1.0, setbacks: "10'/5'/10'" },
     allowedUses: ["Multifamily", "Mixed-use", "Retail", "Senior housing"],
@@ -303,75 +534,67 @@ const SITES = [
   }
 ];
 
-// -------------------- STATE --------------------
+const DEFAULT_FILTERS = {
+  lihtc: false, oz: false, densityBonus: false, inclusionary: false,
+  qct: false, dda: false, tod: false, hudHome: false,
+  liveLocal: false, surtax: false, excludeFloodAE: false,
+  constructionType: "any",
+  maxPrice: 2000000,
+  minLotSF: 0,
+};
 let state = {
   query: "",
   selectedId: null,
-  filters: {
-    lihtc: false, oz: false, densityBonus: false, inclusionary: false,
-    qct: false, dda: false, tod: false, hudHome: false,
-    liveLocal: false, surtax: false, excludeFloodAE: false,
-    constructionType: "any",
-    maxPrice: 2000000,
-    minLotSF: 0,
-  },
-  pfOverride: {}, // {siteId: {hardCostSF, units, monthlyRentRestricted, ...}}
+  hoverId: null,
+  filters: { ...DEFAULT_FILTERS },
+  pfOverride: {},
 };
 
 // -------------------- HELPERS --------------------
-const fmt$ = n => n == null ? "—" : "$" + Math.round(n).toLocaleString();
-const fmt$k = n => n == null ? "—" : "$" + Math.round(n/1000).toLocaleString() + "k";
+const fmt$  = n => n == null ? "—" : "$" + Math.round(n).toLocaleString();
+const fmt$k = n => n == null ? "—" : "$" + Math.round(n/1000).toLocaleString() + "K";
 const fmt$m = n => n == null ? "—" : "$" + (n/1e6).toFixed(2) + "M";
 const fmtNum = n => n == null ? "—" : Math.round(n).toLocaleString();
 const fmtPct = n => n == null ? "—" : (n*100).toFixed(2) + "%";
 const fmtSF = n => fmtNum(n) + " SF";
 const acres = sf => (sf / 43560).toFixed(2);
 
-function getPF(site) {
-  return { ...site.proforma, ...(state.pfOverride[site.id] || {}) };
-}
-
+function getPF(site) { return { ...site.proforma, ...(state.pfOverride[site.id] || {}) }; }
 function computePF(site) {
   const pf = getPF(site);
-  const buildableSF = pf.units * pf.avgUnitSF * 1.18; // 18% loss factor for circ/common
+  const buildableSF = pf.units * pf.avgUnitSF * 1.18;
   const hardCost = buildableSF * pf.hardCostSF;
-  const softCostPct = 0.22;
-  const softCost = hardCost * softCostPct;
+  const softCost = hardCost * 0.22;
   const landCost = site.askPrice;
   const contingency = (hardCost + softCost) * 0.05;
   const tdc = landCost + hardCost + softCost + contingency;
   const costPerUnit = tdc / pf.units;
   const annualRentRestricted = pf.monthlyRentRestricted * pf.units * 12;
-  const opex = annualRentRestricted * 0.42; // OpEx ratio
-  const noi = annualRentRestricted * (1 - 0.42) - (pf.units * 250); // less reserves
+  const noi = annualRentRestricted * 0.58 - (pf.units * 250);
   const yieldOnCost = noi / tdc;
-  // LIHTC eligible basis: roughly TDC minus land minus non-residential
   const eligibleBasis = (hardCost + softCost + contingency) * 0.95;
   const basisBoost = (site.incentiveFlags.qct || site.incentiveFlags.dda) ? 1.30 : 1.0;
   const adjustedBasis = eligibleBasis * basisBoost;
   const lihtcRate = site.incentives.some(i => i.includes("9%")) ? 0.09 : 0.04;
   const annualCredits = adjustedBasis * lihtcRate;
   const tenYrCredits = annualCredits * 10;
-  const equityPrice = 0.92;
-  const lihtcEquity = tenYrCredits * equityPrice;
-  // Funding gap
-  const debtCoverage = noi / 1.20 / 0.065; // 1.20 DSCR @ 6.5% constant
+  const lihtcEquity = tenYrCredits * 0.92;
+  const debtCoverage = noi / 1.20 / 0.065;
   const permLoan = Math.min(debtCoverage, tdc * 0.55);
   const softLoans = tdc * 0.08;
   const gpEquity = Math.max(0, tdc - lihtcEquity - permLoan - softLoans);
   return {
     buildableSF, hardCost, softCost, landCost, contingency, tdc, costPerUnit,
-    annualRentRestricted, opex, noi, yieldOnCost,
+    annualRentRestricted, noi, yieldOnCost,
     eligibleBasis, adjustedBasis, lihtcRate, annualCredits, tenYrCredits, lihtcEquity,
     permLoan, softLoans, gpEquity, basisBoost
   };
 }
-
 function filteredSites() {
   const q = state.query.trim().toLowerCase();
   return SITES.filter(s => {
     if (q) {
-      const hay = [s.zip, s.city, s.state, s.county, s.addr].join(" ").toLowerCase();
+      const hay = [s.zip, s.city, s.state, s.county, s.addr, s.neighborhood].join(" ").toLowerCase();
       if (!hay.includes(q)) return false;
     }
     const f = state.filters;
@@ -396,63 +619,197 @@ function filteredSites() {
   });
 }
 
-function setState(patch) {
-  state = { ...state, ...patch };
-  render();
-}
-
-function setFilter(key, val) {
-  state.filters = { ...state.filters, [key]: val };
-  render();
-}
-
+function setState(patch) { state = { ...state, ...patch }; render(); }
+function setFilter(key, val) { state.filters = { ...state.filters, [key]: val }; render(); }
 function setPF(siteId, key, val) {
   state.pfOverride[siteId] = { ...(state.pfOverride[siteId] || {}), [key]: val };
   render();
 }
+function resetPF(siteId) { delete state.pfOverride[siteId]; render(); }
+function resetFilters() { state.filters = { ...DEFAULT_FILTERS }; state.query = ""; render(); }
+function clearOneFilter(key) { state.filters[key] = DEFAULT_FILTERS[key]; render(); }
 
-function resetPF(siteId) {
-  delete state.pfOverride[siteId];
-  render();
+// -------------------- MIAMI MAP --------------------
+function MiamiMap(sites) {
+  const pins = sites.map(s => {
+    const active = s.id === state.selectedId;
+    const hovered = s.id === state.hoverId;
+    const color = active ? "#fb923c" : (s.incentiveFlags.liveLocal ? "#5eead4" : "#818cf8");
+    return `
+      <g class="map-pin" transform="translate(${s.sx},${s.sy})"
+         onclick="event.stopPropagation();setState({selectedId:'${s.id}'})"
+         onmouseenter="setState({hoverId:'${s.id}'})"
+         onmouseleave="setState({hoverId:null})">
+        ${active || hovered ? `<circle class="pin-ring" r="6" fill="${color}" opacity="0.5"/>` : ''}
+        <circle r="${active ? 7.5 : 5.5}" fill="${color}" stroke="#070b16" stroke-width="2"/>
+        ${active ? `<circle r="2.5" fill="#070b16"/>` : ''}
+      </g>
+    `;
+  }).join("");
+
+  const hovered = state.hoverId ? sites.find(s => s.id === state.hoverId) : null;
+
+  return `
+    <div class="panel map-container overflow-hidden">
+      <div class="px-4 py-3 flex items-center justify-between" style="border-bottom: 1px solid var(--border-soft)">
+        <div class="flex items-center gap-2">
+          <span style="color:var(--teal)">${ICON.map}</span>
+          <div>
+            <div class="text-sm font-semibold">Miami-Dade County</div>
+            <div class="text-[11px]" style="color:var(--muted)">${sites.length} sites · click pin to inspect</div>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center gap-3 text-[11px]" style="color:var(--muted)">
+          <span class="inline-flex items-center gap-1.5"><span style="width:8px;height:8px;border-radius:50%;background:#5eead4;display:inline-block"></span>Live Local</span>
+          <span class="inline-flex items-center gap-1.5"><span style="width:8px;height:8px;border-radius:50%;background:#818cf8;display:inline-block"></span>Standard</span>
+          <span class="inline-flex items-center gap-1.5"><span style="width:8px;height:8px;border-radius:50%;background:#fb923c;display:inline-block"></span>Selected</span>
+        </div>
+      </div>
+      <div style="position:relative">
+        <svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:380px">
+          <defs>
+            <linearGradient id="oceanGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#0a1632"/>
+              <stop offset="100%" stop-color="#091226"/>
+            </linearGradient>
+            <linearGradient id="bayGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#102b4a"/>
+              <stop offset="100%" stop-color="#0c2240"/>
+            </linearGradient>
+            <linearGradient id="landGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#1a2548"/>
+              <stop offset="100%" stop-color="#131c38"/>
+            </linearGradient>
+            <linearGradient id="egGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#0e1a2e"/>
+              <stop offset="100%" stop-color="#131c38" stop-opacity="0.4"/>
+            </linearGradient>
+            <pattern id="dotgrid" x="0" y="0" width="14" height="14" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="0.6" fill="rgba(255,255,255,0.045)"/>
+            </pattern>
+          </defs>
+
+          <!-- Atlantic + bay backdrop -->
+          <rect width="600" height="400" fill="url(#oceanGrad)"/>
+          <rect width="600" height="400" fill="url(#dotgrid)"/>
+
+          <!-- Everglades suggestion (west) -->
+          <path d="M 0 60 L 90 50 Q 80 200 92 350 L 0 360 Z" fill="url(#egGrad)"/>
+          <text x="20" y="200" fill="rgba(255,255,255,0.18)" font-size="9" font-style="italic" letter-spacing="0.15em">EVERGLADES</text>
+
+          <!-- Biscayne Bay -->
+          <path d="M 462 50 Q 472 130 470 220 Q 472 300 466 360 L 514 360 Q 510 300 512 220 Q 510 130 506 50 Z" fill="url(#bayGrad)"/>
+          <text x="478" y="200" fill="rgba(180,210,255,0.32)" font-size="9" letter-spacing="0.2em" transform="rotate(-90, 478, 200)">BISCAYNE BAY</text>
+
+          <!-- Mainland Miami-Dade -->
+          <path d="M 90 50 L 200 48 L 350 50 L 458 52 Q 461 90 458 120 L 455 145 Q 460 180 455 215 L 458 245 Q 462 280 456 310 L 460 345 L 92 360 Q 86 250 90 180 Q 84 110 90 50 Z"
+                fill="url(#landGrad)" stroke="rgba(94,234,212,0.10)" stroke-width="1"/>
+
+          <!-- Barrier islands: Sunny Isles, Bal Harbour, Miami Beach -->
+          <path d="M 524 58 L 540 58 L 538 110 L 524 112 Z" fill="url(#landGrad)" stroke="rgba(94,234,212,0.08)" stroke-width="0.7"/>
+          <path d="M 524 122 L 540 122 L 540 188 L 524 188 Z" fill="url(#landGrad)" stroke="rgba(94,234,212,0.08)" stroke-width="0.7"/>
+          <path d="M 524 200 L 542 200 L 542 360 L 524 360 Z" fill="url(#landGrad)" stroke="rgba(94,234,212,0.08)" stroke-width="0.7"/>
+
+          <!-- Causeways -->
+          <line x1="458" y1="190" x2="524" y2="200" stroke="rgba(94,234,212,0.18)" stroke-width="0.8" stroke-dasharray="2 3"/>
+          <line x1="460" y1="215" x2="524" y2="230" stroke="rgba(94,234,212,0.18)" stroke-width="0.8" stroke-dasharray="2 3"/>
+          <line x1="460" y1="158" x2="524" y2="165" stroke="rgba(94,234,212,0.12)" stroke-width="0.7" stroke-dasharray="2 3"/>
+
+          <!-- Major highways -->
+          <path d="M 430 50 Q 425 200 420 360" stroke="rgba(251,146,60,0.15)" stroke-width="1.4" fill="none" stroke-dasharray="3 4"/>
+          <path d="M 90 220 Q 250 215 458 220" stroke="rgba(251,146,60,0.12)" stroke-width="1.2" fill="none" stroke-dasharray="3 4"/>
+          <path d="M 150 50 Q 200 200 220 360" stroke="rgba(251,146,60,0.1)" stroke-width="1" fill="none" stroke-dasharray="3 4"/>
+
+          <!-- Neighborhood labels -->
+          <g fill="rgba(180,200,230,0.28)" font-size="8" font-family="Space Grotesk" letter-spacing="0.05em">
+            <text x="430" y="110">NORTH MIAMI</text>
+            <text x="420" y="220">DOWNTOWN</text>
+            <text x="395" y="260">BRICKELL</text>
+            <text x="395" y="305">COCONUT GROVE</text>
+            <text x="378" y="170">LIBERTY CITY</text>
+            <text x="335" y="245">CORAL GABLES</text>
+            <text x="265" y="200">WESTCHESTER</text>
+            <text x="205" y="160">DORAL</text>
+            <text x="155" y="240">KENDALL</text>
+            <text x="528" y="180" transform="rotate(90, 528, 180)">MIAMI BEACH</text>
+            <text x="525" y="84">SUNNY ISLES</text>
+          </g>
+
+          <!-- Compass -->
+          <g transform="translate(560,360)" font-family="Space Grotesk">
+            <circle r="14" fill="rgba(7,11,22,0.7)" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
+            <text x="0" y="-6" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="9">N</text>
+            <path d="M 0 -10 L 0 8" stroke="rgba(255,255,255,0.5)" stroke-width="0.8"/>
+            <polygon points="0,-11 -2.5,-6 2.5,-6" fill="#fb923c"/>
+          </g>
+
+          <!-- Scale -->
+          <g transform="translate(20,370)" font-family="Space Grotesk">
+            <line x1="0" y1="0" x2="60" y2="0" stroke="rgba(255,255,255,0.4)" stroke-width="0.7"/>
+            <line x1="0" y1="-3" x2="0" y2="3" stroke="rgba(255,255,255,0.4)" stroke-width="0.7"/>
+            <line x1="60" y1="-3" x2="60" y2="3" stroke="rgba(255,255,255,0.4)" stroke-width="0.7"/>
+            <text x="0" y="-6" font-size="8" fill="rgba(255,255,255,0.4)">~ 5 mi</text>
+          </g>
+
+          ${pins}
+        </svg>
+        ${hovered ? `
+          <div class="tooltip" style="left:${(hovered.sx/600)*100}%; top:${(hovered.sy/400)*95}%">
+            <div style="font-weight:600">${hovered.neighborhood} · ${hovered.zip}</div>
+            <div style="color:var(--muted)">${hovered.addr}</div>
+            <div style="margin-top:3px"><span style="color:var(--teal)">${hovered.zoning.code}</span> · ${fmt$k(hovered.askPrice)} · ${acres(hovered.lotSF)} ac</div>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
 }
 
-// -------------------- COMPONENTS --------------------
-
+// -------------------- HEADER --------------------
 function Header() {
   return `
-    <header class="panel border-b sticky top-0 z-20" style="border-color: var(--border)">
-      <div class="max-w-[1400px] mx-auto px-6 py-3 flex items-center gap-6">
-        <div class="flex items-center gap-2">
-          <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0b1220">P</div>
-          <div class="font-semibold tracking-tight">ParcelPath</div>
-          <div class="text-xs" style="color:var(--muted)">Affordable Housing · Miami-Dade, FL</div>
+    <header class="panel-glass sticky top-0 z-30" style="border-bottom: 1px solid var(--border-soft); border-radius: 0;">
+      <div class="max-w-[1400px] mx-auto px-6 py-3.5 flex items-center gap-6">
+        <div class="flex items-center gap-2.5">
+          <div style="width:34px;height:34px;background:linear-gradient(135deg, #5eead4, #818cf8 55%, #fb923c);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#062a26;box-shadow:0 4px 18px rgba(94,234,212,0.25)">
+            ${ICON.logo}
+          </div>
+          <div>
+            <div class="font-display font-bold tracking-tight text-[15px] leading-tight">ParcelPath</div>
+            <div class="text-[10.5px] flex items-center gap-1.5" style="color:var(--muted)">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--good);display:inline-block;box-shadow:0 0 6px var(--good)"></span>
+              Miami-Dade · Affordable Housing
+            </div>
+          </div>
         </div>
         <div class="flex-1 max-w-2xl">
           <div class="relative">
-            <input class="input pl-9" placeholder="Search by zip, neighborhood, or address — try '33136' or 'Little Havana'"
+            <span class="absolute left-3 top-1/2 -translate-y-1/2" style="color:var(--muted)">${ICON.search}</span>
+            <input class="input pl-10 pr-10" placeholder="Search by zip, neighborhood, or address — try ‘33136’, ‘Wynwood’, ‘Calle Ocho’"
               value="${state.query.replace(/"/g, '&quot;')}"
               oninput="setState({query: this.value})" />
-            <div class="absolute left-3 top-2.5" style="color:var(--muted)">⌕</div>
+            ${state.query ? `<button class="absolute right-3 top-1/2 -translate-y-1/2" style="color:var(--muted)" onclick="setState({query:''})">${ICON.close}</button>` : ''}
           </div>
         </div>
-        <div class="hidden md:flex items-center gap-3 text-xs" style="color:var(--muted)">
-          <span><span class="kbd">${filteredSites().length}</span> sites match</span>
-          <span class="kbd">v0.1 · mock data</span>
+        <div class="hidden md:flex items-center gap-2 text-[11px]" style="color:var(--muted)">
+          <span class="px-2.5 py-1 rounded-md" style="background:rgba(255,255,255,0.03);border:1px solid var(--border-soft)">${filteredSites().length} / ${SITES.length} sites</span>
+          <span class="px-2.5 py-1 rounded-md" style="background:rgba(94,234,212,0.06);border:1px solid rgba(94,234,212,0.2);color:var(--teal)">v0.2 prototype</span>
         </div>
       </div>
     </header>
   `;
 }
 
+// -------------------- SIDEBAR --------------------
 function FilterToggle(key, label, hint) {
   const on = state.filters[key];
   return `
     <label class="flex items-center justify-between py-1.5 cursor-pointer">
-      <span class="flex items-center gap-2">
-        <input type="checkbox" ${on ? "checked" : ""} onchange="setFilter('${key}', this.checked)" />
-        <span class="text-sm">${label}</span>
+      <span class="flex items-center gap-2.5">
+        <input type="checkbox" class="cbox" ${on ? "checked" : ""} onchange="setFilter('${key}', this.checked)" />
+        <span class="text-[13px]" style="color:${on?'var(--text)':'var(--text-2)'}">${label}</span>
       </span>
-      ${hint ? `<span class="text-[10px]" style="color:var(--muted)">${hint}</span>` : ""}
+      ${hint ? `<span class="text-[10px] px-1.5 py-0.5 rounded" style="color:var(--muted);background:rgba(255,255,255,0.03)">${hint}</span>` : ""}
     </label>
   `;
 }
@@ -460,10 +817,11 @@ function FilterToggle(key, label, hint) {
 function Sidebar() {
   const f = state.filters;
   return `
-    <aside class="panel rounded-lg p-4 space-y-4 scrollbar overflow-y-auto" style="max-height: calc(100vh - 110px)">
+    <aside class="panel p-5 space-y-5 scrollbar overflow-y-auto" style="max-height: calc(100vh - 110px); position: sticky; top: 88px;">
       <div>
-        <div class="text-xs uppercase tracking-wider mb-2" style="color:var(--muted)">Housing Incentives</div>
-        ${FilterToggle("lihtc",       "LIHTC eligible",          "9% or 4%")}
+        <div class="label-eyebrow mb-3 flex items-center gap-1.5">${ICON.sliders} Filters</div>
+        <div class="label-eyebrow mb-2" style="font-size:10px">Housing Incentives</div>
+        ${FilterToggle("lihtc",       "LIHTC eligible",          "9% / 4%")}
         ${FilterToggle("qct",         "Qualified Census Tract",  "QCT")}
         ${FilterToggle("dda",         "Diff. Development Area",  "DDA")}
         ${FilterToggle("oz",          "Opportunity Zone",        "OZ")}
@@ -474,191 +832,335 @@ function Sidebar() {
       </div>
       <div class="divider"></div>
       <div>
-        <div class="text-xs uppercase tracking-wider mb-2" style="color:var(--muted)">Florida / Miami-Dade</div>
+        <div class="label-eyebrow mb-2" style="font-size:10px">Florida / Miami-Dade</div>
         ${FilterToggle("liveLocal",      "Live Local Act eligible",  "SB 102")}
         ${FilterToggle("surtax",         "Miami-Dade Surtax",        "Doc stamp")}
-        ${FilterToggle("excludeFloodAE", "Exclude flood zone AE",    "FEMA")}
+        ${FilterToggle("excludeFloodAE", "Exclude FEMA zone AE",     "Flood")}
       </div>
       <div class="divider"></div>
       <div>
-        <div class="text-xs uppercase tracking-wider mb-2" style="color:var(--muted)">Site Constraints</div>
-        <label class="text-xs" style="color:var(--muted)">Max asking price · <span class="num" style="color:var(--text)">${fmt$m(f.maxPrice)}</span></label>
+        <div class="label-eyebrow mb-3" style="font-size:10px">Site Constraints</div>
+        <div class="flex justify-between items-end mb-1">
+          <label class="text-[12px]" style="color:var(--text-2)">Max asking price</label>
+          <span class="text-[12px] num accent-text font-semibold">${fmt$m(f.maxPrice)}</span>
+        </div>
         <input type="range" min="350000" max="2000000" step="10000" value="${f.maxPrice}"
-          class="slider mt-1 mb-3" oninput="setFilter('maxPrice', +this.value)" />
-        <label class="text-xs" style="color:var(--muted)">Min lot size · <span class="num" style="color:var(--text)">${fmtSF(f.minLotSF)} (${acres(f.minLotSF)} ac)</span></label>
-        <input type="range" min="0" max="65000" step="1000" value="${f.minLotSF}"
-          class="slider mt-1 mb-3" oninput="setFilter('minLotSF', +this.value)" />
-        <label class="text-xs block mb-1" style="color:var(--muted)">Construction type</label>
+          class="slider mb-4" oninput="setFilter('maxPrice', +this.value)" />
+        <div class="flex justify-between items-end mb-1">
+          <label class="text-[12px]" style="color:var(--text-2)">Min lot size</label>
+          <span class="text-[12px] num accent-text font-semibold">${acres(f.minLotSF)} ac</span>
+        </div>
+        <input type="range" min="0" max="32000" step="500" value="${f.minLotSF}"
+          class="slider mb-4" oninput="setFilter('minLotSF', +this.value)" />
+        <label class="text-[12px] block mb-1.5" style="color:var(--text-2)">Construction type</label>
         <select class="select" onchange="setFilter('constructionType', this.value)">
           <option value="any" ${f.constructionType==="any"?"selected":""}>Any</option>
           <option value="Type V" ${f.constructionType==="Type V"?"selected":""}>Type V (wood)</option>
-          <option value="Type III" ${f.constructionType==="Type III"?"selected":""}>Type III (wood w/ noncomb. ext.)</option>
+          <option value="Type III" ${f.constructionType==="Type III"?"selected":""}>Type III</option>
           <option value="Type I" ${f.constructionType==="Type I"?"selected":""}>Type I (concrete/steel)</option>
           <option value="Modular" ${f.constructionType==="Modular"?"selected":""}>Modular</option>
           <option value="Adaptive reuse" ${f.constructionType==="Adaptive reuse"?"selected":""}>Adaptive reuse</option>
         </select>
       </div>
-      <div class="divider"></div>
-      <button class="btn-ghost w-full" onclick="state.filters={lihtc:false,oz:false,densityBonus:false,inclusionary:false,qct:false,dda:false,tod:false,hudHome:false,liveLocal:false,surtax:false,excludeFloodAE:false,constructionType:'any',maxPrice:2000000,minLotSF:0};render()">Reset filters</button>
+      <button class="btn-ghost w-full flex items-center justify-center gap-1.5" onclick="resetFilters()">${ICON.refresh} Reset filters</button>
     </aside>
   `;
 }
 
-function Map(sites) {
-  const pins = sites.map(s => {
-    const active = s.id === state.selectedId;
-    return `
-      <div class="pin" style="left:${s.lng}%; top:${s.lat}%" onclick="setState({selectedId:'${s.id}'})">
-        <div class="pin-dot ${active ? "active" : ""}" title="${s.addr}, ${s.city}"></div>
-      </div>
-    `;
-  }).join("");
+// -------------------- ACTIVE FILTER CHIPS --------------------
+const FILTER_LABELS = {
+  lihtc: "LIHTC", qct: "QCT", dda: "DDA", oz: "OZ",
+  densityBonus: "Density Bonus", inclusionary: "Inclusionary",
+  tod: "TOD", hudHome: "HUD HOME",
+  liveLocal: "Live Local Act", surtax: "Miami-Dade Surtax", excludeFloodAE: "No Flood AE",
+};
+function ActiveFilters() {
+  const f = state.filters;
+  const chips = [];
+  for (const k of Object.keys(FILTER_LABELS)) {
+    if (f[k]) chips.push(`<span class="filter-chip">${FILTER_LABELS[k]} <button onclick="clearOneFilter('${k}')">×</button></span>`);
+  }
+  if (f.maxPrice < DEFAULT_FILTERS.maxPrice) chips.push(`<span class="filter-chip">≤ ${fmt$m(f.maxPrice)} <button onclick="clearOneFilter('maxPrice')">×</button></span>`);
+  if (f.minLotSF > 0) chips.push(`<span class="filter-chip">≥ ${acres(f.minLotSF)} ac <button onclick="clearOneFilter('minLotSF')">×</button></span>`);
+  if (f.constructionType !== "any") chips.push(`<span class="filter-chip">${f.constructionType} <button onclick="clearOneFilter('constructionType')">×</button></span>`);
+  if (state.query) chips.push(`<span class="filter-chip">"${state.query.replace(/"/g, '&quot;')}" <button onclick="setState({query:''})">×</button></span>`);
+  if (chips.length === 0) return "";
   return `
-    <div class="panel rounded-lg overflow-hidden">
-      <div class="px-4 py-2 flex items-center justify-between border-b" style="border-color:var(--border)">
-        <div class="text-sm font-medium">Map · Miami-Dade County, FL</div>
-        <div class="text-[11px]" style="color:var(--muted)">${sites.length} sites · click pin to inspect · schematic — N up, Biscayne Bay right</div>
-      </div>
-      <div class="map-bg relative" style="height: 280px;">
-        ${pins}
-        <div class="absolute bottom-2 left-3 text-[10px]" style="color:var(--muted)">▼ Schematic — not to scale</div>
-      </div>
+    <div class="flex flex-wrap items-center gap-2 fade-in">
+      <span class="label-eyebrow" style="font-size:10px">Active</span>
+      ${chips.join("")}
+      <button class="btn-ghost text-[11px] !py-1 !px-2.5" onclick="resetFilters()">Clear all</button>
     </div>
   `;
 }
 
+// -------------------- BADGES & SITE CARD --------------------
+function badges(s) {
+  const flags = s.incentiveFlags;
+  const out = [];
+  if (flags.lihtc)        out.push(`<span class="chip chip-teal">LIHTC</span>`);
+  if (flags.qct)          out.push(`<span class="chip chip-good">QCT</span>`);
+  if (flags.dda)          out.push(`<span class="chip chip-good">DDA</span>`);
+  if (flags.oz)           out.push(`<span class="chip chip-indigo">OZ</span>`);
+  if (flags.liveLocal)    out.push(`<span class="chip chip-amber">Live Local</span>`);
+  if (flags.densityBonus) out.push(`<span class="chip">+ Density</span>`);
+  if (flags.tod)          out.push(`<span class="chip">TOD</span>`);
+  if (flags.inclusionary) out.push(`<span class="chip">IZ</span>`);
+  if (flags.surtax)       out.push(`<span class="chip">Surtax</span>`);
+  if (flags.floodAE)      out.push(`<span class="chip chip-warn">${ICON.warn} Flood AE</span>`);
+  return out.join("");
+}
+
 function siteCard(s) {
   const pf = computePF(s);
-  const flags = s.incentiveFlags;
-  const badges = [];
-  if (flags.lihtc) badges.push(`<span class="chip chip-accent">LIHTC</span>`);
-  if (flags.qct) badges.push(`<span class="chip chip-good">QCT</span>`);
-  if (flags.dda) badges.push(`<span class="chip chip-good">DDA</span>`);
-  if (flags.oz) badges.push(`<span class="chip chip-indigo">OZ</span>`);
-  if (flags.liveLocal) badges.push(`<span class="chip chip-warn">Live Local</span>`);
-  if (flags.densityBonus) badges.push(`<span class="chip">Density Bonus</span>`);
-  if (flags.tod) badges.push(`<span class="chip">TOD</span>`);
-  if (flags.inclusionary) badges.push(`<span class="chip">IZ</span>`);
-  if (flags.surtax) badges.push(`<span class="chip">Surtax</span>`);
-  if (flags.floodAE) badges.push(`<span class="chip" style="color:#fbbf24;border-color:#fbbf24">⚠ Flood AE</span>`);
   const active = s.id === state.selectedId;
+  const yieldColor = pf.yieldOnCost >= 0.06 ? "var(--good)" : pf.yieldOnCost >= 0.045 ? "var(--amber)" : "var(--danger)";
   return `
-    <div class="site-card panel rounded-lg p-4 ${active ? "ring-2" : ""}"
-      style="${active ? "border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)" : ""}"
-      onclick="setState({selectedId:'${s.id}'})">
+    <div class="site-card panel p-4 ${active ? "active" : ""}"
+         onclick="setState({selectedId:'${s.id}'})">
       <div class="flex items-start justify-between gap-3">
-        <div>
-          <div class="font-semibold">${s.addr}</div>
-          <div class="text-xs" style="color:var(--muted)">${s.city}, ${s.state} ${s.zip} · ${s.county}</div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2">
+            <span style="color:var(--teal)">${ICON.pin}</span>
+            <span class="text-[11px] font-medium" style="color:var(--teal)">${s.neighborhood}</span>
+            <span class="text-[11px]" style="color:var(--muted)">· ${s.zip}</span>
+          </div>
+          <div class="font-display font-semibold text-[15px] mt-1 leading-snug">${s.addr}</div>
+          <div class="text-[11px]" style="color:var(--muted)">${s.city}, ${s.state} · ${s.county}</div>
         </div>
-        <div class="text-2xl">${s.photo}</div>
+        <div class="text-right shrink-0">
+          <div class="text-[10px] uppercase tracking-wider" style="color:var(--muted)">Asking</div>
+          <div class="font-display font-bold text-[16px] num">${fmt$k(s.askPrice)}</div>
+          <div class="text-[10.5px] num" style="color:var(--muted)">$${(s.askPrice/s.lotSF).toFixed(0)}/SF land</div>
+        </div>
       </div>
-      <div class="grid grid-cols-3 gap-2 mt-3 text-xs">
-        <div><div style="color:var(--muted)">Lot</div><div class="num font-medium">${acres(s.lotSF)} ac</div></div>
-        <div><div style="color:var(--muted)">Ask</div><div class="num font-medium">${fmt$k(s.askPrice)}</div></div>
-        <div><div style="color:var(--muted)">$/SF</div><div class="num font-medium">$${(s.askPrice/s.lotSF).toFixed(0)}</div></div>
-        <div><div style="color:var(--muted)">Zoning</div><div class="font-medium">${s.zoning.code}</div></div>
-        <div><div style="color:var(--muted)">Units (proj.)</div><div class="num font-medium">${getPF(s).units}</div></div>
-        <div><div style="color:var(--muted)">YoC</div><div class="num font-medium" style="color:${pf.yieldOnCost>=0.06?'var(--good)':pf.yieldOnCost>=0.045?'var(--warn)':'var(--danger)'}">${fmtPct(pf.yieldOnCost)}</div></div>
+      <div class="grid grid-cols-4 gap-2 mt-3 text-[11.5px]">
+        <div>
+          <div class="text-[10px]" style="color:var(--muted)">Lot</div>
+          <div class="num font-semibold">${acres(s.lotSF)}<span class="text-[10px] font-normal" style="color:var(--muted)"> ac</span></div>
+        </div>
+        <div>
+          <div class="text-[10px]" style="color:var(--muted)">Zoning</div>
+          <div class="font-semibold">${s.zoning.code}</div>
+        </div>
+        <div>
+          <div class="text-[10px]" style="color:var(--muted)">Units</div>
+          <div class="num font-semibold">${getPF(s).units}</div>
+        </div>
+        <div>
+          <div class="text-[10px]" style="color:var(--muted)">YoC</div>
+          <div class="num font-semibold" style="color:${yieldColor}">${fmtPct(pf.yieldOnCost)}</div>
+        </div>
       </div>
-      <div class="flex flex-wrap gap-1 mt-3">${badges.join("")}</div>
+      <div class="flex flex-wrap gap-1.5 mt-3">${badges(s)}</div>
     </div>
   `;
 }
 
 function Results(sites) {
   if (!sites.length) {
-    return `<div class="panel rounded-lg p-8 text-center" style="color:var(--muted)">No sites match those filters. Try widening price range or clearing incentive filters.</div>`;
+    return `
+      <div class="panel dotgrid p-10 text-center fade-in" style="color:var(--muted)">
+        <div class="text-[14px] font-semibold" style="color:var(--text-2)">No sites match those filters</div>
+        <div class="text-[12px] mt-1">Try widening price range, clearing incentives, or different keywords.</div>
+        <button class="btn-ghost mt-4" onclick="resetFilters()">Reset filters</button>
+      </div>
+    `;
   }
-  return `<div class="grid grid-cols-1 lg:grid-cols-2 gap-3">${sites.map(siteCard).join("")}</div>`;
+  return `<div class="grid grid-cols-1 md:grid-cols-2 gap-3 fade-in">${sites.map(siteCard).join("")}</div>`;
 }
 
+// -------------------- CHARTS --------------------
+function donut(slices, centerLabel, centerValue) {
+  const total = slices.reduce((a, s) => a + s.value, 0) || 1;
+  const R = 60, r = 42, cx = 80, cy = 80;
+  let acc = 0;
+  const segs = slices.map(s => {
+    const startAngle = (acc / total) * Math.PI * 2 - Math.PI/2;
+    acc += s.value;
+    const endAngle = (acc / total) * Math.PI * 2 - Math.PI/2;
+    const large = (endAngle - startAngle) > Math.PI ? 1 : 0;
+    const x1 = cx + R * Math.cos(startAngle), y1 = cy + R * Math.sin(startAngle);
+    const x2 = cx + R * Math.cos(endAngle),   y2 = cy + R * Math.sin(endAngle);
+    const x3 = cx + r * Math.cos(endAngle),   y3 = cy + r * Math.sin(endAngle);
+    const x4 = cx + r * Math.cos(startAngle), y4 = cy + r * Math.sin(startAngle);
+    return `<path d="M ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${r} ${r} 0 ${large} 0 ${x4} ${y4} Z" fill="${s.color}" stroke="var(--panel-2)" stroke-width="1.5"/>`;
+  }).join("");
+  return `
+    <svg viewBox="0 0 160 160" width="160" height="160">
+      ${segs}
+      <text x="80" y="76" text-anchor="middle" fill="var(--muted)" font-size="9.5" letter-spacing="0.08em" font-family="Space Grotesk">${centerLabel}</text>
+      <text x="80" y="96" text-anchor="middle" fill="var(--text)" font-size="14" font-weight="700" font-family="Space Grotesk">${centerValue}</text>
+    </svg>
+  `;
+}
+
+function gauge(value, label) {
+  const max = 0.10;
+  const pct = Math.max(0, Math.min(1, value / max));
+  const angle = pct * Math.PI;
+  const R = 60, cx = 80, cy = 90;
+  const x = cx - R * Math.cos(angle);
+  const y = cy - R * Math.sin(angle);
+  const large = 0;
+  const arcPath = `M ${cx-R} ${cy} A ${R} ${R} 0 ${large} 1 ${x} ${y}`;
+  const trackPath = `M ${cx-R} ${cy} A ${R} ${R} 0 0 1 ${cx+R} ${cy}`;
+  const color = value >= 0.06 ? "#34d399" : value >= 0.045 ? "#fbbf24" : "#f87171";
+  const ticks = [0.04, 0.06, 0.08].map(t => {
+    const a = (t / max) * Math.PI;
+    const tx1 = cx - R * Math.cos(a), ty1 = cy - R * Math.sin(a);
+    const tx2 = cx - (R+5) * Math.cos(a), ty2 = cy - (R+5) * Math.sin(a);
+    const lblX = cx - (R+13) * Math.cos(a), lblY = cy - (R+13) * Math.sin(a);
+    return `
+      <line x1="${tx1}" y1="${ty1}" x2="${tx2}" y2="${ty2}" stroke="var(--muted)" stroke-width="1"/>
+      <text x="${lblX}" y="${lblY+3}" text-anchor="middle" fill="var(--muted)" font-size="8">${(t*100).toFixed(0)}%</text>
+    `;
+  }).join("");
+  return `
+    <svg viewBox="0 0 160 110" width="160" height="110">
+      <path d="${trackPath}" class="gauge-track"/>
+      <path d="${arcPath}" stroke="${color}" fill="none" stroke-width="10" stroke-linecap="round"/>
+      ${ticks}
+      <text x="80" y="78" text-anchor="middle" fill="var(--text)" font-size="20" font-weight="700" font-family="Space Grotesk">${fmtPct(value)}</text>
+      <text x="80" y="92" text-anchor="middle" fill="var(--muted)" font-size="9" letter-spacing="0.08em">${label}</text>
+    </svg>
+  `;
+}
+
+function stackedBar(items, total) {
+  return `
+    <div class="bar" style="height:14px">
+      ${items.map(i => {
+        const pct = (i.value/total)*100;
+        return `<span style="width:${pct}%;background:${i.color}"></span>`;
+      }).join("")}
+    </div>
+    <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[11px]">
+      ${items.map(i => `
+        <span class="inline-flex items-center gap-1.5" style="color:var(--text-2)">
+          <span style="width:8px;height:8px;border-radius:2px;background:${i.color};display:inline-block"></span>
+          ${i.label} · <span class="num" style="color:var(--muted)">${fmt$k(i.value)}</span>
+        </span>
+      `).join("")}
+    </div>
+  `;
+}
+
+// -------------------- DETAIL --------------------
 function Detail(s) {
   if (!s) {
     return `
-      <div class="panel rounded-lg p-8 text-center" style="color:var(--muted)">
-        Select a site from the map or list to see zoning, permits, construction, and a back-of-envelope pro-forma.
+      <div class="panel dotgrid p-12 text-center fade-in">
+        <div style="color:var(--muted)" class="mb-3 inline-flex justify-center">${ICON.pin}</div>
+        <div class="text-[15px] font-semibold" style="color:var(--text)">Select a site to inspect</div>
+        <div class="text-[12px] mt-1" style="color:var(--muted)">Click a pin on the map or a card below to see zoning, permits, construction, and a back-of-envelope pro-forma.</div>
       </div>
     `;
   }
   const pf = computePF(s);
   const inputs = getPF(s);
-  const fundingPct = {
-    lihtc: pf.lihtcEquity / pf.tdc,
-    perm: pf.permLoan / pf.tdc,
-    soft: pf.softLoans / pf.tdc,
-    gp:   pf.gpEquity / pf.tdc,
-  };
 
   return `
-    <div class="panel rounded-lg overflow-hidden">
-      <div class="p-4 border-b flex items-start justify-between" style="border-color:var(--border)">
+    <div class="panel overflow-hidden fade-in">
+      <div class="px-5 py-4 flex items-start justify-between" style="border-bottom:1px solid var(--border-soft)">
         <div>
-          <div class="text-xs uppercase tracking-wider" style="color:var(--muted)">Site Detail</div>
-          <div class="text-lg font-semibold mt-1">${s.addr}</div>
-          <div class="text-sm" style="color:var(--muted)">${s.city}, ${s.state} ${s.zip} · ${s.county}</div>
+          <div class="flex items-center gap-2 text-[11px]">
+            <span style="color:var(--teal)">${ICON.pin}</span>
+            <span class="font-medium" style="color:var(--teal)">${s.neighborhood}</span>
+            <span style="color:var(--muted)">·</span>
+            <span style="color:var(--muted)">${s.zip}</span>
+            <span style="color:var(--muted)">·</span>
+            <span style="color:var(--muted)">${s.county}</span>
+          </div>
+          <div class="font-display text-[20px] font-bold mt-1.5 leading-tight">${s.addr}</div>
+          <div class="text-[12px] mt-1" style="color:var(--text-2)">${s.currentUse}</div>
         </div>
-        <button class="btn-ghost text-xs" onclick="setState({selectedId:null})">Close</button>
+        <button class="btn-icon" onclick="setState({selectedId:null})">${ICON.close}</button>
       </div>
 
-      <div class="p-4 space-y-5">
-        <!-- Summary row -->
+      <div class="p-5 space-y-6">
         <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div class="panel-2 rounded-lg p-3"><div class="text-[11px]" style="color:var(--muted)">Lot</div><div class="num font-semibold">${fmtSF(s.lotSF)}<div class="text-[11px] font-normal" style="color:var(--muted)">${acres(s.lotSF)} ac</div></div></div>
-          <div class="panel-2 rounded-lg p-3"><div class="text-[11px]" style="color:var(--muted)">Asking</div><div class="num font-semibold">${fmt$(s.askPrice)}</div><div class="text-[11px]" style="color:var(--muted)">$${(s.askPrice/s.lotSF).toFixed(0)}/SF land</div></div>
-          <div class="panel-2 rounded-lg p-3"><div class="text-[11px]" style="color:var(--muted)">Current Use</div><div class="text-sm font-medium">${s.currentUse}</div></div>
-          <div class="panel-2 rounded-lg p-3"><div class="text-[11px]" style="color:var(--muted)">By-right units</div><div class="num font-semibold">${Math.round((s.lotSF/43560) * s.zoning.maxUnitsAcre)}</div><div class="text-[11px]" style="color:var(--muted)">${s.zoning.maxUnitsAcre}/ac</div></div>
-          <div class="panel-2 rounded-lg p-3"><div class="text-[11px]" style="color:var(--muted)">Max Height</div><div class="num font-semibold">${s.zoning.maxHeight}'</div><div class="text-[11px]" style="color:var(--muted)">FAR ${s.zoning.far}</div></div>
+          ${[
+            { k: "Lot Size", v: fmtSF(s.lotSF), sub: `${acres(s.lotSF)} ac` },
+            { k: "Asking", v: fmt$(s.askPrice), sub: `$${(s.askPrice/s.lotSF).toFixed(0)}/SF land` },
+            { k: "By-right Units", v: Math.round((s.lotSF/43560) * s.zoning.maxUnitsAcre), sub: `${s.zoning.maxUnitsAcre}/ac` },
+            { k: "Max Height", v: `${s.zoning.maxHeight}'`, sub: `FAR ${s.zoning.far}` },
+            { k: "AMI Target", v: `${inputs.amiTarget}%`, sub: `${getPF(s).units} units planned` },
+          ].map(t => `
+            <div class="stat-tile">
+              <div class="text-[10px] uppercase tracking-wider" style="color:var(--muted)">${t.k}</div>
+              <div class="stat-num num mt-1">${t.v}</div>
+              <div class="text-[10.5px] mt-0.5" style="color:var(--muted)">${t.sub}</div>
+            </div>
+          `).join("")}
         </div>
 
-        <!-- Zoning -->
         <section>
-          <h3 class="text-sm font-semibold mb-2 flex items-center gap-2">📐 Zoning · <span class="chip">${s.zoning.code}</span></h3>
-          <div class="panel-2 rounded-lg p-3 text-sm">
-            <div class="font-medium">${s.zoning.name}</div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 text-xs">
-              <div><div style="color:var(--muted)">FAR</div><div class="num">${s.zoning.far}</div></div>
-              <div><div style="color:var(--muted)">Max height</div><div class="num">${s.zoning.maxHeight}'</div></div>
-              <div><div style="color:var(--muted)">Density</div><div class="num">${s.zoning.maxUnitsAcre} units/ac</div></div>
-              <div><div style="color:var(--muted)">Parking min</div><div class="num">${s.zoning.minParking}/unit</div></div>
-              <div class="col-span-2 md:col-span-4"><div style="color:var(--muted)">Setbacks (front/side/rear)</div><div>${s.zoning.setbacks}</div></div>
+          <div class="h-section"><span class="icon">${ICON.ruler}</span>Zoning <span class="chip ml-1">${s.zoning.code}</span></div>
+          <div class="panel-2 p-4">
+            <div class="font-display font-semibold text-[13.5px]">${s.zoning.name}</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
+              ${[
+                ["FAR", s.zoning.far],
+                ["Max height", s.zoning.maxHeight + "'"],
+                ["Density", s.zoning.maxUnitsAcre + " u/ac"],
+                ["Parking min", s.zoning.minParking + "/u"],
+              ].map(([k,v]) => `
+                <div>
+                  <div class="text-[10px] uppercase tracking-wider" style="color:var(--muted)">${k}</div>
+                  <div class="num font-semibold text-[14px] mt-0.5">${v}</div>
+                </div>
+              `).join("")}
             </div>
-            <div class="mt-3 text-xs">
-              <div style="color:var(--muted)">Allowed uses</div>
-              <div>${s.allowedUses.join(" · ")}</div>
+            <div class="mt-3 text-[12px]">
+              <div class="text-[10px] uppercase tracking-wider" style="color:var(--muted)">Setbacks (front/side/rear)</div>
+              <div style="color:var(--text-2)">${s.zoning.setbacks}</div>
+            </div>
+            <div class="mt-3 text-[12px]">
+              <div class="text-[10px] uppercase tracking-wider" style="color:var(--muted)">Allowed uses</div>
+              <div style="color:var(--text-2)">${s.allowedUses.join(" · ")}</div>
             </div>
           </div>
         </section>
 
-        <!-- Construction -->
-        <section>
-          <h3 class="text-sm font-semibold mb-2">🏗️ Allowed Construction Types</h3>
-          <div class="flex flex-wrap gap-2">
-            ${s.constructionTypes.map(c => `<span class="chip">${c}</span>`).join("")}
-          </div>
-        </section>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <section>
+            <div class="h-section"><span class="icon">${ICON.hammer}</span>Allowed Construction</div>
+            <div class="flex flex-wrap gap-1.5">
+              ${s.constructionTypes.map(c => `<span class="chip">${c}</span>`).join("")}
+            </div>
+          </section>
+          <section>
+            <div class="h-section"><span class="icon">${ICON.coin}</span>Applicable Incentives</div>
+            <div class="flex flex-wrap gap-1.5">
+              ${s.incentives.map(i => `<span class="chip chip-teal">${i}</span>`).join("")}
+            </div>
+            ${s.incentiveFlags.qct || s.incentiveFlags.dda ? `<div class="text-[11.5px] mt-2 flex items-start gap-1.5" style="color:var(--good)">${ICON.check}<span><strong>130% LIHTC basis boost</strong> applies (QCT/DDA designation)</span></div>` : ""}
+            ${s.incentiveFlags.liveLocal ? `<div class="text-[11.5px] mt-1.5 flex items-start gap-1.5" style="color:var(--amber)">${ICON.spark}<span><strong>Live Local Act (FL SB 102):</strong> unlocks highest density + height within 1-mile radius, reduced parking, 75% ad-valorem exemption — if ≥40% units ≤120% AMI for 30 yrs.</span></div>` : ""}
+            ${s.incentiveFlags.floodAE ? `<div class="text-[11.5px] mt-1.5 flex items-start gap-1.5" style="color:var(--danger)">${ICON.warn}<span><strong>FEMA Flood Zone AE:</strong> base flood elevation +1' freeboard required; podium typology assumed.</span></div>` : ""}
+          </section>
+        </div>
 
-        <!-- Permits -->
         <section>
-          <h3 class="text-sm font-semibold mb-2">📋 Permits & Approvals</h3>
-          <div class="panel-2 rounded-lg overflow-hidden">
-            <table class="w-full text-xs">
-              <thead><tr style="color:var(--muted)">
-                <th class="text-left p-2">Permit / Approval</th>
-                <th class="text-left p-2">Timeline</th>
-                <th class="text-right p-2">Est. fee</th>
-                <th class="text-left p-2">Required?</th>
+          <div class="h-section"><span class="icon">${ICON.file}</span>Permits & Approvals</div>
+          <div class="panel-2 overflow-hidden">
+            <table class="nice-table">
+              <thead><tr>
+                <th>Permit / Approval</th>
+                <th>Timeline</th>
+                <th style="text-align:right">Est. fee</th>
+                <th>Status</th>
               </tr></thead>
               <tbody>
                 ${s.permits.map(p => `
-                  <tr style="border-top:1px solid var(--border)">
-                    <td class="p-2">
-                      <div class="font-medium">${p.name}</div>
-                      ${p.note ? `<div class="text-[11px]" style="color:var(--muted)">${p.note}</div>` : ""}
+                  <tr>
+                    <td>
+                      <div style="color:var(--text);font-weight:500">${p.name}</div>
+                      ${p.note ? `<div class="text-[11px] mt-0.5" style="color:var(--muted)">${p.note}</div>` : ""}
                     </td>
-                    <td class="p-2">${p.time}</td>
-                    <td class="p-2 text-right num">${fmt$(p.cost)}</td>
-                    <td class="p-2">${p.required ? `<span class="chip chip-warn">Required</span>` : `<span class="chip">Optional</span>`}</td>
+                    <td style="color:var(--text-2)">${p.time}</td>
+                    <td style="text-align:right" class="num">${fmt$(p.cost)}</td>
+                    <td>${p.required ? `<span class="chip chip-warn">Required</span>` : `<span class="chip">Optional</span>`}</td>
                   </tr>
                 `).join("")}
               </tbody>
@@ -666,124 +1168,109 @@ function Detail(s) {
           </div>
         </section>
 
-        <!-- Incentives -->
         <section>
-          <h3 class="text-sm font-semibold mb-2">💰 Applicable Incentives</h3>
-          <div class="flex flex-wrap gap-2">
-            ${s.incentives.map(i => `<span class="chip chip-accent">${i}</span>`).join("")}
-          </div>
-          ${s.incentiveFlags.qct || s.incentiveFlags.dda ? `<div class="text-xs mt-2" style="color:var(--good)">✓ 130% LIHTC basis boost applies (QCT/DDA designation)</div>` : ""}
-          ${s.incentiveFlags.liveLocal ? `<div class="text-xs mt-1" style="color:var(--warn)">✦ Live Local Act (FL SB 102): unlocks highest-allowed density + height within 1-mile radius, reduced parking, and 75% ad-valorem exemption — if ≥40% of units restricted ≤120% AMI for 30 years.</div>` : ""}
-          ${s.incentiveFlags.floodAE ? `<div class="text-xs mt-1" style="color:var(--danger)">⚠ FEMA Flood Zone AE — base flood elevation +1' freeboard required; ground floor not viable for residential; podium typology assumed.</div>` : ""}
+          <div class="h-section"><span class="icon">${ICON.note}</span>Notes</div>
+          <div class="panel-2 p-4 text-[13px]" style="color:var(--text-2);line-height:1.55">${s.notes}</div>
         </section>
 
-        <!-- Notes -->
-        <section>
-          <h3 class="text-sm font-semibold mb-2">📝 Notes</h3>
-          <div class="panel-2 rounded-lg p-3 text-sm">${s.notes}</div>
-        </section>
-
-        <!-- Pro-forma -->
         <section>
           <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-semibold">📊 Quick Pro-Forma (back-of-envelope)</h3>
-            <button class="btn-ghost text-xs" onclick="resetPF('${s.id}')">Reset inputs</button>
+            <div class="h-section mb-0"><span class="icon">${ICON.chart}</span>Quick Pro-Forma</div>
+            <button class="btn-ghost text-[11px] flex items-center gap-1" onclick="resetPF('${s.id}')">${ICON.refresh} Reset inputs</button>
           </div>
-          <div class="panel-2 rounded-lg p-4 space-y-4">
-            <!-- Inputs -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-              <label class="block">
-                <div style="color:var(--muted)">Units</div>
-                <input class="input num text-right" value="${inputs.units}" type="number"
-                  onchange="setPF('${s.id}', 'units', +this.value)" />
-              </label>
-              <label class="block">
-                <div style="color:var(--muted)">Avg unit SF</div>
-                <input class="input num text-right" value="${inputs.avgUnitSF}" type="number"
-                  onchange="setPF('${s.id}', 'avgUnitSF', +this.value)" />
-              </label>
-              <label class="block">
-                <div style="color:var(--muted)">Hard cost $/SF</div>
-                <input class="input num text-right" value="${inputs.hardCostSF}" type="number"
-                  onchange="setPF('${s.id}', 'hardCostSF', +this.value)" />
-              </label>
-              <label class="block">
-                <div style="color:var(--muted)">Restricted rent $/mo</div>
-                <input class="input num text-right" value="${inputs.monthlyRentRestricted}" type="number"
-                  onchange="setPF('${s.id}', 'monthlyRentRestricted', +this.value)" />
-              </label>
-            </div>
-
-            <div class="divider"></div>
-
-            <!-- Uses -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div class="text-xs uppercase tracking-wider mb-2" style="color:var(--muted)">Uses (Total Development Cost)</div>
-                <div class="space-y-1 text-sm">
-                  <div class="flex justify-between"><span>Land</span><span class="num">${fmt$(pf.landCost)}</span></div>
-                  <div class="flex justify-between"><span>Hard cost · ${fmtNum(pf.buildableSF)} GSF × $${inputs.hardCostSF}</span><span class="num">${fmt$(pf.hardCost)}</span></div>
-                  <div class="flex justify-between"><span>Soft cost (22%)</span><span class="num">${fmt$(pf.softCost)}</span></div>
-                  <div class="flex justify-between"><span>Contingency (5%)</span><span class="num">${fmt$(pf.contingency)}</span></div>
-                  <div class="flex justify-between font-semibold pt-1 mt-1" style="border-top:1px solid var(--border)">
-                    <span>Total Development Cost</span><span class="num">${fmt$(pf.tdc)}</span>
-                  </div>
-                  <div class="flex justify-between text-xs" style="color:var(--muted)">
-                    <span>$/unit</span><span class="num">${fmt$(pf.costPerUnit)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Sources -->
-              <div>
-                <div class="text-xs uppercase tracking-wider mb-2" style="color:var(--muted)">Sources (Capital Stack)</div>
-                <div class="space-y-2 text-sm">
-                  <div>
-                    <div class="flex justify-between"><span>LIHTC equity · ${(pf.lihtcRate*100).toFixed(0)}% @ ${pf.basisBoost===1.3?"130% boost":"100%"}</span><span class="num">${fmt$(pf.lihtcEquity)}</span></div>
-                    <div class="bar mt-1"><span style="width:${(fundingPct.lihtc*100).toFixed(1)}%"></span></div>
-                  </div>
-                  <div>
-                    <div class="flex justify-between"><span>Perm loan (1.20 DSCR @ 6.5%)</span><span class="num">${fmt$(pf.permLoan)}</span></div>
-                    <div class="bar mt-1"><span style="width:${(fundingPct.perm*100).toFixed(1)}%"></span></div>
-                  </div>
-                  <div>
-                    <div class="flex justify-between"><span>Soft loans (HOME, AHTF, TIF)</span><span class="num">${fmt$(pf.softLoans)}</span></div>
-                    <div class="bar mt-1"><span style="width:${(fundingPct.soft*100).toFixed(1)}%"></span></div>
-                  </div>
-                  <div>
-                    <div class="flex justify-between"><span>GP equity / funding gap</span><span class="num" style="color:${pf.gpEquity>pf.tdc*0.1?'var(--warn)':'var(--good)'}">${fmt$(pf.gpEquity)}</span></div>
-                    <div class="bar mt-1"><span style="width:${(fundingPct.gp*100).toFixed(1)}%"></span></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="divider"></div>
-
-            <!-- Returns -->
+          <div class="panel-2 p-5 space-y-5">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div>
-                <div class="text-[11px]" style="color:var(--muted)">Gross Rent (restricted)</div>
-                <div class="num font-semibold">${fmt$(pf.annualRentRestricted)}<span class="text-[11px] font-normal" style="color:var(--muted)"> /yr</span></div>
+              ${[
+                ["units", "Units", inputs.units],
+                ["avgUnitSF", "Avg unit SF", inputs.avgUnitSF],
+                ["hardCostSF", "Hard cost $/SF", inputs.hardCostSF],
+                ["monthlyRentRestricted", "Restricted rent $/mo", inputs.monthlyRentRestricted],
+              ].map(([key, label, val]) => `
+                <div class="pf-input-group">
+                  <label>${label}</label>
+                  <input class="input num text-right" type="number" value="${val}"
+                    onchange="setPF('${s.id}', '${key}', +this.value)" />
+                </div>
+              `).join("")}
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="panel p-4 flex flex-col items-center justify-center">
+                ${gauge(pf.yieldOnCost, "Yield-on-Cost")}
+                <div class="text-[10.5px] mt-2 text-center" style="color:var(--muted)">
+                  Stabilized yr-1 · NOI / TDC<br/>
+                  <span style="color:${pf.yieldOnCost>=0.06?'var(--good)':pf.yieldOnCost>=0.045?'var(--amber)':'var(--danger)'}">
+                    ${pf.yieldOnCost>=0.06?'Strong':pf.yieldOnCost>=0.045?'Marginal':'Below threshold'}
+                  </span>
+                </div>
               </div>
-              <div>
-                <div class="text-[11px]" style="color:var(--muted)">NOI (yr 1 stabilized)</div>
-                <div class="num font-semibold">${fmt$(pf.noi)}</div>
+              <div class="panel p-4 flex flex-col items-center justify-center">
+                ${donut([
+                  { label: "LIHTC equity", value: pf.lihtcEquity, color: "#5eead4" },
+                  { label: "Perm loan",    value: pf.permLoan,    color: "#818cf8" },
+                  { label: "Soft loans",   value: pf.softLoans,   color: "#fb923c" },
+                  { label: "GP equity",    value: pf.gpEquity,    color: "#fb7185" },
+                ], "TDC", fmt$m(pf.tdc))}
+                <div class="text-[10.5px] mt-1 text-center" style="color:var(--muted)">Capital stack</div>
               </div>
-              <div>
-                <div class="text-[11px]" style="color:var(--muted)">Yield-on-Cost</div>
-                <div class="num font-semibold" style="color:${pf.yieldOnCost>=0.06?'var(--good)':pf.yieldOnCost>=0.045?'var(--warn)':'var(--danger)'}">${fmtPct(pf.yieldOnCost)}</div>
-              </div>
-              <div>
-                <div class="text-[11px]" style="color:var(--muted)">10-yr LIHTC Credits</div>
-                <div class="num font-semibold">${fmt$(pf.tenYrCredits)}</div>
+              <div class="space-y-2">
+                <div class="stat-tile">
+                  <div class="text-[10px] uppercase tracking-wider" style="color:var(--muted)">Cost per unit</div>
+                  <div class="stat-num num mt-1">${fmt$(pf.costPerUnit)}</div>
+                </div>
+                <div class="stat-tile">
+                  <div class="text-[10px] uppercase tracking-wider" style="color:var(--muted)">NOI (yr-1)</div>
+                  <div class="stat-num num mt-1">${fmt$(pf.noi)}</div>
+                  <div class="text-[10.5px]" style="color:var(--muted)">${fmt$(pf.annualRentRestricted)} EGR</div>
+                </div>
+                <div class="stat-tile">
+                  <div class="text-[10px] uppercase tracking-wider" style="color:var(--muted)">10-yr LIHTC</div>
+                  <div class="stat-num num mt-1">${fmt$(pf.tenYrCredits)}</div>
+                  <div class="text-[10.5px]" style="color:var(--muted)">${(pf.lihtcRate*100).toFixed(0)}% @ ${pf.basisBoost===1.3?'130% boost':'100%'}</div>
+                </div>
               </div>
             </div>
 
-            <div class="text-[11px]" style="color:var(--muted)">
-              <strong>Method:</strong> Buildable GSF = units × avg unit SF × 1.18 (loss factor). TDC = land + hard + 22% soft + 5% contingency.
-              Restricted rent at ${inputs.amiTarget}% AMI assumed for stabilized year. Perm loan sized to lesser of 1.20 DSCR @ 6.5% or 55% LTC.
-              LIHTC equity = 10-yr credits × $0.92/credit. Numbers are sketch-level — confirm against state QAP, local fee schedules, and current GC pricing.
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <div class="label-eyebrow mb-2" style="font-size:10px">Uses (Total Development Cost)</div>
+                ${stackedBar([
+                  { label: "Land", value: pf.landCost, color: "#fb7185" },
+                  { label: "Hard cost", value: pf.hardCost, color: "#5eead4" },
+                  { label: "Soft cost", value: pf.softCost, color: "#818cf8" },
+                  { label: "Contingency", value: pf.contingency, color: "#fb923c" },
+                ], pf.tdc)}
+                <div class="mt-3">
+                  <div class="kv"><span class="k">Land</span><span class="v">${fmt$(pf.landCost)}</span></div>
+                  <div class="kv"><span class="k">Hard cost · ${fmtNum(pf.buildableSF)} GSF</span><span class="v">${fmt$(pf.hardCost)}</span></div>
+                  <div class="kv"><span class="k">Soft cost (22%)</span><span class="v">${fmt$(pf.softCost)}</span></div>
+                  <div class="kv"><span class="k">Contingency (5%)</span><span class="v">${fmt$(pf.contingency)}</span></div>
+                  <div class="kv" style="border-top:1px solid var(--border-soft);margin-top:4px;padding-top:8px"><span class="k" style="color:var(--text);font-weight:600">Total Development Cost</span><span class="v font-semibold accent-text">${fmt$(pf.tdc)}</span></div>
+                </div>
+              </div>
+              <div>
+                <div class="label-eyebrow mb-2" style="font-size:10px">Sources (Capital Stack)</div>
+                ${stackedBar([
+                  { label: "LIHTC equity", value: pf.lihtcEquity, color: "#5eead4" },
+                  { label: "Perm loan",    value: pf.permLoan,    color: "#818cf8" },
+                  { label: "Soft loans",   value: pf.softLoans,   color: "#fb923c" },
+                  { label: "GP equity",    value: pf.gpEquity,    color: "#fb7185" },
+                ], pf.tdc)}
+                <div class="mt-3">
+                  <div class="kv"><span class="k">LIHTC equity · ${(pf.lihtcRate*100).toFixed(0)}%${pf.basisBoost===1.3?' @ boost':''}</span><span class="v">${fmt$(pf.lihtcEquity)}</span></div>
+                  <div class="kv"><span class="k">Perm loan · 1.20 DSCR @ 6.5%</span><span class="v">${fmt$(pf.permLoan)}</span></div>
+                  <div class="kv"><span class="k">Soft loans (HOME/AHTF/TIF)</span><span class="v">${fmt$(pf.softLoans)}</span></div>
+                  <div class="kv"><span class="k">GP equity / funding gap</span><span class="v" style="color:${pf.gpEquity > pf.tdc*0.1 ? 'var(--amber)' : 'var(--good)'}">${fmt$(pf.gpEquity)}</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-[10.5px] leading-relaxed" style="color:var(--muted);border-top:1px solid var(--border-soft);padding-top:10px">
+              <strong style="color:var(--text-2)">Method:</strong> Buildable GSF = units × avg SF × 1.18 (loss factor). TDC = land + hard + 22% soft + 5% contingency.
+              Restricted rent assumes ${inputs.amiTarget}% AMI at stabilization. Perm loan = min(1.20 DSCR @ 6.5%, 55% LTC). LIHTC equity = 10-yr credits × $0.92.
+              Sketch-level — confirm against state QAP (FL FHFC), local fee schedules, and current GC pricing.
             </div>
           </div>
         </section>
@@ -796,33 +1283,37 @@ function Detail(s) {
 function render() {
   const sites = filteredSites();
   const selected = SITES.find(s => s.id === state.selectedId) || null;
+  const activeFiltersHtml = ActiveFilters();
   document.getElementById("app").innerHTML = `
     ${Header()}
-    <main class="max-w-[1400px] mx-auto px-6 py-4 grid grid-cols-12 gap-4">
-      <div class="col-span-12 lg:col-span-3">${Sidebar()}</div>
-      <div class="col-span-12 lg:col-span-9 space-y-4">
-        ${Map(sites)}
-        ${selected ? Detail(selected) : Results(sites)}
-        ${selected ? `<div class="text-xs text-center" style="color:var(--muted)">— Back to all matches —</div>${Results(sites)}` : ""}
+    <main class="max-w-[1400px] mx-auto px-6 py-5">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-12 lg:col-span-3">${Sidebar()}</div>
+        <div class="col-span-12 lg:col-span-9 space-y-4">
+          ${MiamiMap(sites)}
+          ${activeFiltersHtml}
+          ${selected ? Detail(selected) : ''}
+          ${selected ? `<div class="flex items-center gap-3 mt-2"><div class="divider flex-1"></div><div class="text-[11px]" style="color:var(--muted)">Other matches</div><div class="divider flex-1"></div></div>` : ''}
+          ${Results(sites)}
+        </div>
       </div>
     </main>
-    <footer class="max-w-[1400px] mx-auto px-6 py-6 text-[11px]" style="color:var(--muted)">
-      ParcelPath prototype · Mock data for 10 representative Miami-Dade sites · Production version would pull parcels from Miami-Dade Property Appraiser + Regrid,
-      Miami 21 zoning from the City of Miami GIS, QCT/DDA from HUD, OZ from CDFI Fund, FEMA flood layers, and rents from HUD FMR + CoStar. Live Local Act preemption analysis would
-      cross-reference highest-allowed density/height within a 1-mile radius. Pro-forma logic is intentionally simple — first-pass screening, not investment-committee material.
-      Hurricane-code (FBC HVHZ) construction premiums are baked into hard-cost assumptions.
+    <footer class="max-w-[1400px] mx-auto px-6 py-8 text-[11px] leading-relaxed" style="color:var(--muted)">
+      <span style="color:var(--text-2);font-weight:600">ParcelPath</span> · v0.2 prototype · Mock data for 10 Miami-Dade sites · Production version would source parcels from Miami-Dade Property Appraiser + Regrid,
+      Miami 21 zoning from City of Miami GIS, QCT/DDA from HUD, OZ from CDFI Fund, FEMA flood layers, and rents from HUD FMR + CoStar.
+      Live Local Act preemption analysis would cross-reference highest-allowed density/height within a 1-mile radius.
+      Hard-cost assumptions include hurricane-code (FBC HVHZ) premiums. Pro-forma is sketch-level — first-pass screening only.
     </footer>
   `;
 }
 
-// Expose helpers globally for inline event handlers
 window.setState = setState;
 window.setFilter = setFilter;
 window.setPF = setPF;
 window.resetPF = resetPF;
-window.render = render;
+window.resetFilters = resetFilters;
+window.clearOneFilter = clearOneFilter;
 
-// Initial render
 render();
 </script>
 </body>
