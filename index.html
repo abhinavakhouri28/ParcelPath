@@ -8,6 +8,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
+<link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
+<style>
+  .maplibregl-popup-content{background:#0b1124;color:#ecf0fb;border:1px solid #243160;border-radius:8px;font-size:11px;box-shadow:0 12px 24px rgba(0,0,0,.5);padding:8px 10px}
+  .maplibregl-popup-tip{border-top-color:#0b1124!important;border-bottom-color:#0b1124!important}
+  .maplibregl-ctrl-group{background:#111a2e!important;border:1px solid #243160!important}
+  .maplibregl-ctrl-group button+button{border-top:1px solid #243160!important}
+  .maplibregl-ctrl button .maplibregl-ctrl-icon{filter:invert(1) hue-rotate(180deg)}
+  #map-slot .maplibregl-map{border-radius:0 0 14px 14px}
+</style>
 <style>
   :root {
     --bg-0: #070b16;
@@ -714,25 +724,135 @@ function resetFilters() { state.filters = { ...DEFAULT_FILTERS }; state.query = 
 function clearOneFilter(key) { state.filters[key] = DEFAULT_FILTERS[key]; render(); }
 
 // -------------------- MIAMI MAP --------------------
+// -------------------- MAP (real, MapLibre GL) --------------------
+let mapObj = null, mapNode = null, mapReady = false, popup = null, lastFlownId = null;
+
+function sitesFC(sites) {
+  return {
+    type: "FeatureCollection",
+    features: sites.filter(s => SITE_LATLNG[s.id]).map(s => {
+      const ll = SITE_LATLNG[s.id];
+      return {
+        type: "Feature",
+        id: s.id,
+        geometry: { type: "Point", coordinates: [ll[1], ll[0]] },
+        properties: {
+          id: s.id,
+          liveLocal: !!s.incentiveFlags.liveLocal,
+          neighborhood: s.neighborhood, zip: s.zip, addr: s.addr,
+          zoning: s.zoning.code, price: fmt$k(s.askPrice), ac: acres(s.lotSF),
+        },
+      };
+    }),
+  };
+}
+
+function initMap(node) {
+  try {
+    mapObj = new maplibregl.Map({
+      container: node,
+      style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+      center: [-80.21, 25.82],
+      zoom: 10.3,
+    });
+    mapObj.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    mapObj.on("load", () => {
+      mapObj.addSource("sites", { type: "geojson", data: sitesFC(filteredSites()) });
+      mapObj.addLayer({
+        id: "sites-glow", type: "circle", source: "sites",
+        paint: {
+          "circle-radius": 15,
+          "circle-color": ["case", ["get", "liveLocal"], "#5eead4", "#818cf8"],
+          "circle-opacity": 0.12,
+        },
+      });
+      mapObj.addLayer({
+        id: "sites-dots", type: "circle", source: "sites",
+        paint: {
+          "circle-radius": ["case", ["boolean", ["feature-state", "selected"], false], 9, 6.5],
+          "circle-color": ["case",
+            ["boolean", ["feature-state", "selected"], false], "#fb923c",
+            ["get", "liveLocal"], "#5eead4", "#818cf8"],
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#070b16",
+        },
+      });
+      mapObj.on("click", "sites-dots", (e) => {
+        const f = e.features && e.features[0];
+        if (f) setState({ selectedId: f.properties.id });
+      });
+      mapObj.on("mouseenter", "sites-dots", (e) => {
+        mapObj.getCanvas().style.cursor = "pointer";
+        const f = e.features && e.features[0]; if (!f) return;
+        const p = f.properties;
+        if (popup) popup.remove();
+        popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 12 })
+          .setLngLat(e.lngLat)
+          .setHTML('<div style="font-weight:600">' + p.neighborhood + ' · ' + p.zip + '</div>' +
+                   '<div style="color:var(--muted)">' + p.addr + '</div>' +
+                   '<div style="margin-top:3px"><span style="color:var(--teal)">' + p.zoning + '</span> · ' + p.price + ' · ' + p.ac + ' ac</div>')
+          .addTo(mapObj);
+      });
+      mapObj.on("mouseleave", "sites-dots", () => {
+        mapObj.getCanvas().style.cursor = "";
+        if (popup) { popup.remove(); popup = null; }
+      });
+      mapReady = true;
+      updateMapData(filteredSites());
+      updateMapSelection();
+    });
+  } catch (e) {
+    mapObj = null; mapReady = false;
+    const slot = document.getElementById("map-slot");
+    if (slot) slot.innerHTML = svgMapInner(filteredSites());
+  }
+}
+
+function updateMapData(sites) {
+  if (!mapReady || !mapObj) return;
+  const src = mapObj.getSource("sites");
+  if (src) src.setData(sitesFC(sites));
+}
+
+function updateMapSelection() {
+  if (!mapReady || !mapObj) return;
+  for (const s of SITES) {
+    try { mapObj.setFeatureState({ source: "sites", id: s.id }, { selected: false }); } catch (e) {}
+  }
+  if (state.selectedId) {
+    try { mapObj.setFeatureState({ source: "sites", id: state.selectedId }, { selected: true }); } catch (e) {}
+    if (state.selectedId !== lastFlownId) {
+      const ll = SITE_LATLNG[state.selectedId];
+      if (ll) mapObj.flyTo({ center: [ll[1], ll[0]], zoom: 13.2, speed: 0.8 });
+      lastFlownId = state.selectedId;
+    }
+  } else {
+    lastFlownId = null;
+  }
+}
+
+// Re-attach the persistent map node into the freshly-rendered slot (or fall back).
+function mountMap(sites) {
+  const slot = document.getElementById("map-slot");
+  if (!slot) return;
+  if (window.maplibregl) {
+    if (!mapNode) {
+      mapNode = document.createElement("div");
+      mapNode.style.cssText = "width:100%;height:100%";
+      slot.appendChild(mapNode);
+      initMap(mapNode);
+    } else {
+      slot.appendChild(mapNode);
+      if (mapObj) mapObj.resize();
+    }
+    updateMapData(sites);
+    updateMapSelection();
+  } else {
+    slot.innerHTML = svgMapInner(sites);
+  }
+}
+
 function MiamiMap(sites) {
-  const pins = sites.map(s => {
-    const active = s.id === state.selectedId;
-    const hovered = s.id === state.hoverId;
-    const color = active ? "#fb923c" : (s.incentiveFlags.liveLocal ? "#5eead4" : "#818cf8");
-    return `
-      <g class="map-pin" transform="translate(${s.sx},${s.sy})"
-         onclick="event.stopPropagation();setState({selectedId:'${s.id}'})"
-         onmouseenter="setState({hoverId:'${s.id}'})"
-         onmouseleave="setState({hoverId:null})">
-        ${active || hovered ? `<circle class="pin-ring" r="6" fill="${color}" opacity="0.5"/>` : ''}
-        <circle r="${active ? 7.5 : 5.5}" fill="${color}" stroke="#070b16" stroke-width="2"/>
-        ${active ? `<circle r="2.5" fill="#070b16"/>` : ''}
-      </g>
-    `;
-  }).join("");
-
-  const hovered = state.hoverId ? sites.find(s => s.id === state.hoverId) : null;
-
   return `
     <div class="panel map-container overflow-hidden">
       <div class="px-4 py-3 flex items-center justify-between" style="border-bottom: 1px solid var(--border-soft)">
@@ -740,7 +860,7 @@ function MiamiMap(sites) {
           <span style="color:var(--teal)">${ICON.map}</span>
           <div>
             <div class="text-sm font-semibold">Miami-Dade County</div>
-            <div class="text-[11px]" style="color:var(--muted)">${sites.length} sites · click pin to inspect</div>
+            <div class="text-[11px]" style="color:var(--muted)">${sites.length} sites · click a pin to inspect</div>
           </div>
         </div>
         <div class="hidden md:flex items-center gap-3 text-[11px]" style="color:var(--muted)">
@@ -749,6 +869,30 @@ function MiamiMap(sites) {
           <span class="inline-flex items-center gap-1.5"><span style="width:8px;height:8px;border-radius:50%;background:#fb923c;display:inline-block"></span>Selected</span>
         </div>
       </div>
+      <div id="map-slot" style="position:relative;width:100%;height:380px"></div>
+    </div>
+  `;
+}
+
+// Fallback stylized map — used only if MapLibre GL can't load (e.g. offline).
+function svgMapInner(sites) {
+  const pins = sites.map(s => {
+    const active = s.id === state.selectedId;
+    const hov = s.id === state.hoverId;
+    const color = active ? "#fb923c" : (s.incentiveFlags.liveLocal ? "#5eead4" : "#818cf8");
+    return `
+      <g class="map-pin" transform="translate(${s.sx},${s.sy})"
+         onclick="event.stopPropagation();setState({selectedId:'${s.id}'})"
+         onmouseenter="setState({hoverId:'${s.id}'})"
+         onmouseleave="setState({hoverId:null})">
+        ${active || hov ? `<circle class="pin-ring" r="6" fill="${color}" opacity="0.5"/>` : ''}
+        <circle r="${active ? 7.5 : 5.5}" fill="${color}" stroke="#070b16" stroke-width="2"/>
+        ${active ? `<circle r="2.5" fill="#070b16"/>` : ''}
+      </g>
+    `;
+  }).join("");
+  const hovered = state.hoverId ? sites.find(s => s.id === state.hoverId) : null;
+  return `
       <div style="position:relative">
         <svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:380px">
           <defs>
@@ -773,38 +917,30 @@ function MiamiMap(sites) {
             </pattern>
           </defs>
 
-          <!-- Atlantic + bay backdrop -->
           <rect width="600" height="400" fill="url(#oceanGrad)"/>
           <rect width="600" height="400" fill="url(#dotgrid)"/>
 
-          <!-- Everglades suggestion (west) -->
           <path d="M 0 60 L 90 50 Q 80 200 92 350 L 0 360 Z" fill="url(#egGrad)"/>
           <text x="20" y="200" fill="rgba(255,255,255,0.18)" font-size="9" font-style="italic" letter-spacing="0.15em">EVERGLADES</text>
 
-          <!-- Biscayne Bay -->
           <path d="M 462 50 Q 472 130 470 220 Q 472 300 466 360 L 514 360 Q 510 300 512 220 Q 510 130 506 50 Z" fill="url(#bayGrad)"/>
           <text x="478" y="200" fill="rgba(180,210,255,0.32)" font-size="9" letter-spacing="0.2em" transform="rotate(-90, 478, 200)">BISCAYNE BAY</text>
 
-          <!-- Mainland Miami-Dade -->
           <path d="M 90 50 L 200 48 L 350 50 L 458 52 Q 461 90 458 120 L 455 145 Q 460 180 455 215 L 458 245 Q 462 280 456 310 L 460 345 L 92 360 Q 86 250 90 180 Q 84 110 90 50 Z"
                 fill="url(#landGrad)" stroke="rgba(94,234,212,0.10)" stroke-width="1"/>
 
-          <!-- Barrier islands: Sunny Isles, Bal Harbour, Miami Beach -->
           <path d="M 524 58 L 540 58 L 538 110 L 524 112 Z" fill="url(#landGrad)" stroke="rgba(94,234,212,0.08)" stroke-width="0.7"/>
           <path d="M 524 122 L 540 122 L 540 188 L 524 188 Z" fill="url(#landGrad)" stroke="rgba(94,234,212,0.08)" stroke-width="0.7"/>
           <path d="M 524 200 L 542 200 L 542 360 L 524 360 Z" fill="url(#landGrad)" stroke="rgba(94,234,212,0.08)" stroke-width="0.7"/>
 
-          <!-- Causeways -->
           <line x1="458" y1="190" x2="524" y2="200" stroke="rgba(94,234,212,0.18)" stroke-width="0.8" stroke-dasharray="2 3"/>
           <line x1="460" y1="215" x2="524" y2="230" stroke="rgba(94,234,212,0.18)" stroke-width="0.8" stroke-dasharray="2 3"/>
           <line x1="460" y1="158" x2="524" y2="165" stroke="rgba(94,234,212,0.12)" stroke-width="0.7" stroke-dasharray="2 3"/>
 
-          <!-- Major highways -->
           <path d="M 430 50 Q 425 200 420 360" stroke="rgba(251,146,60,0.15)" stroke-width="1.4" fill="none" stroke-dasharray="3 4"/>
           <path d="M 90 220 Q 250 215 458 220" stroke="rgba(251,146,60,0.12)" stroke-width="1.2" fill="none" stroke-dasharray="3 4"/>
           <path d="M 150 50 Q 200 200 220 360" stroke="rgba(251,146,60,0.1)" stroke-width="1" fill="none" stroke-dasharray="3 4"/>
 
-          <!-- Neighborhood labels -->
           <g fill="rgba(180,200,230,0.28)" font-size="8" font-family="Space Grotesk" letter-spacing="0.05em">
             <text x="430" y="110">NORTH MIAMI</text>
             <text x="420" y="220">DOWNTOWN</text>
@@ -819,7 +955,6 @@ function MiamiMap(sites) {
             <text x="525" y="84">SUNNY ISLES</text>
           </g>
 
-          <!-- Compass -->
           <g transform="translate(560,360)" font-family="Space Grotesk">
             <circle r="14" fill="rgba(7,11,22,0.7)" stroke="rgba(255,255,255,0.15)" stroke-width="0.7"/>
             <text x="0" y="-6" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="9">N</text>
@@ -827,7 +962,6 @@ function MiamiMap(sites) {
             <polygon points="0,-11 -2.5,-6 2.5,-6" fill="#fb923c"/>
           </g>
 
-          <!-- Scale -->
           <g transform="translate(20,370)" font-family="Space Grotesk">
             <line x1="0" y1="0" x2="60" y2="0" stroke="rgba(255,255,255,0.4)" stroke-width="0.7"/>
             <line x1="0" y1="-3" x2="0" y2="3" stroke="rgba(255,255,255,0.4)" stroke-width="0.7"/>
@@ -845,7 +979,6 @@ function MiamiMap(sites) {
           </div>
         ` : ''}
       </div>
-    </div>
   `;
 }
 
@@ -1368,6 +1501,8 @@ function render() {
   const sites = filteredSites();
   const selected = SITES.find(s => s.id === state.selectedId) || null;
   const activeFiltersHtml = ActiveFilters();
+  // Preserve the live MapLibre node across full re-renders (re-attached after).
+  if (mapNode && mapNode.parentNode) mapNode.parentNode.removeChild(mapNode);
   document.getElementById("app").innerHTML = `
     ${Header()}
     <main class="max-w-[1400px] mx-auto px-6 py-5">
@@ -1391,6 +1526,7 @@ function render() {
       Pro-forma is sketch-level — first-pass screening only.
     </footer>
   `;
+  mountMap(filteredSites());
 }
 
 window.setState = setState;
