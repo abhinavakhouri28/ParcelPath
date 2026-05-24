@@ -17,6 +17,17 @@
   .maplibregl-ctrl-group button+button{border-top:1px solid #243160!important}
   .maplibregl-ctrl button .maplibregl-ctrl-icon{filter:invert(1) hue-rotate(180deg)}
   #map-slot .maplibregl-map{border-radius:0 0 14px 14px}
+  .pp-modal-overlay{position:fixed;inset:0;background:rgba(4,7,16,0.72);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
+  .pp-modal{background:#131c38;border:1px solid #243160;border-radius:16px;max-width:680px;width:100%;max-height:82vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.55)}
+  .pp-modal-head{position:sticky;top:0;background:#131c38;border-bottom:1px solid #1d2750;display:flex;align-items:center;padding:14px 20px;gap:12px}
+  .pp-modal-body{padding:18px 22px 24px;color:#c2cae0;font-size:13px;line-height:1.55}
+  .pp-modal-body h4{color:#ecf0fb;font-size:13px;font-weight:700;margin:16px 0 4px}
+  .pp-modal-body p{margin:0 0 8px}
+  .pp-modal-body .muted{color:#7a87ab;font-size:11px;margin-top:12px}
+  .pp-x{margin-left:auto;cursor:pointer;color:#8492b3;border:1px solid #243160;border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+  .pp-x:hover{background:rgba(255,255,255,.06);color:#fff}
+  .pp-link{color:#5eead4;cursor:pointer}
+  .pp-link:hover{text-decoration:underline}
 </style>
 <style>
   :root {
@@ -1497,6 +1508,57 @@ function Detail(s) {
 }
 
 // -------------------- ROOT --------------------
+// -------------------- LEGAL MODAL (Disclaimer / Privacy) --------------------
+const DOC = {
+  disclaimer: {
+    title: "Disclaimer",
+    html: `
+      <p><strong style="color:var(--text)">Informational use only.</strong> ParcelPath provides preliminary, automated estimates — zoning summaries, incentive eligibility flags, permit checklists, costs, and pro-forma figures — for first-pass screening only. It is not legal, financial, investment, tax, zoning, land-use, engineering, or real-estate advice, and creates no professional relationship.</p>
+      <h4>No reliance; verify independently</h4>
+      <p>Do not make acquisition, financing, design, or development decisions in reliance on the Service. Zoning, incentive programs (LIHTC, QCT/DDA, Opportunity Zones, Florida's Live Local Act), flood designations, fees, and market conditions change often and vary by parcel. Verify all information with the relevant municipal, county, state, and federal authorities and qualified professionals before acting.</p>
+      <h4>Third-party data</h4>
+      <p>The Service aggregates data from third-party public sources, which may be incomplete, outdated, inaccurate, or unavailable. Outputs are not official determinations of zoning, eligibility, or flood risk.</p>
+      <h4>Illustrative figures</h4>
+      <p>Pro-forma outputs, costs, rents, and projections are illustrative estimates based on simplified assumptions. Actual results will differ; they are not offers, appraisals, or guarantees.</p>
+      <h4>No warranty</h4>
+      <p>The Service is provided "as is," without warranties of any kind. To the fullest extent permitted by law, ParcelPath and its owner disclaim liability for any loss arising from use of or reliance on the Service.</p>
+      <p class="muted">ParcelPath is independent and not affiliated with, endorsed by, or sponsored by any government agency or company referenced. Questions: abhinav.akhouri@gmail.com</p>
+    `,
+  },
+  privacy: {
+    title: "Privacy",
+    html: `
+      <p><strong style="color:var(--text)">Summary.</strong> This prototype does not require an account and does not collect, store, or sell your personal information. No ParcelPath server receives your data, and we set no tracking cookies.</p>
+      <h4>How it works</h4>
+      <p>The app runs in your browser and makes requests directly from your device to third-party public mapping and government data services (basemap tiles; City of Miami, Miami-Dade, FEMA, and HUD data). Those third parties may receive standard technical information (such as your IP address) and log it under their own privacy policies, which we do not control.</p>
+      <h4>Information we collect</h4>
+      <p>Today: none collected by us. If you email us, we receive only what you choose to send, used solely to reply.</p>
+      <h4>Hosting &amp; analytics</h4>
+      <p>If hosted on a static host (e.g., GitHub Pages, Netlify), that host may keep standard server logs under its own policy. We run no analytics or advertising trackers in the prototype.</p>
+      <h4>Future</h4>
+      <p>Before adding accounts, a waitlist, payments, or analytics, this policy will be expanded to cover what we collect and your rights, including CCPA/CPRA and GDPR where applicable.</p>
+      <p class="muted">Last updated: May 2026. Contact: abhinav.akhouri@gmail.com</p>
+    `,
+  },
+};
+function Modal() {
+  if (!state.modal || !DOC[state.modal]) return "";
+  const d = DOC[state.modal];
+  return `
+    <div class="pp-modal-overlay" onclick="if(event.target===this)closeDoc()">
+      <div class="pp-modal">
+        <div class="pp-modal-head">
+          <div class="font-display" style="font-weight:700;color:var(--text);font-size:15px">${d.title}</div>
+          <div class="pp-x" onclick="closeDoc()">${ICON.close}</div>
+        </div>
+        <div class="pp-modal-body">${d.html}</div>
+      </div>
+    </div>
+  `;
+}
+function openDoc(k) { setState({ modal: k }); }
+function closeDoc() { setState({ modal: null }); }
+
 function render() {
   const sites = filteredSites();
   const selected = SITES.find(s => s.id === state.selectedId) || null;
@@ -1524,7 +1586,13 @@ function render() {
       Incentive designations (QCT/DDA/OZ/Live Local) are tagged by neighborhood; rents and construction costs are estimates.
       If live GIS can't be reached (e.g. opened from a file:// path in some browsers), the app shows sample values — host it, or use the ↻ button to retry.
       Pro-forma is sketch-level — first-pass screening only.
+      <div style="margin-top:10px">
+        <a class="pp-link" onclick="openDoc('disclaimer')">Disclaimer</a>
+        <span style="color:var(--border)">&nbsp;·&nbsp;</span>
+        <a class="pp-link" onclick="openDoc('privacy')">Privacy</a>
+      </div>
     </footer>
+    ${Modal()}
   `;
   mountMap(filteredSites());
 }
@@ -1536,6 +1604,8 @@ window.resetPF = resetPF;
 window.resetFilters = resetFilters;
 window.clearOneFilter = clearOneFilter;
 window.enrichFromLiveGIS = enrichFromLiveGIS;
+window.openDoc = openDoc;
+window.closeDoc = closeDoc;
 
 render();
 // Pull real zoning + flood data from public Miami / FEMA GIS for each parcel.
