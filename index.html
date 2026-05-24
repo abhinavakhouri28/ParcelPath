@@ -534,6 +534,90 @@ const SITES = [
   }
 ];
 
+// -------------------- LIVE DATA (Phase 0) --------------------
+// Real Miami coordinates for each representative parcel. On load the app queries
+// public GIS services at these points to pull REAL zoning + flood data.
+const SITE_LATLNG = {
+  "mia-33136-001": [25.7889, -80.2018], // Overtown
+  "mia-33135-002": [25.7656, -80.2138], // Little Havana
+  "mia-33142-003": [25.8230, -80.2270], // Liberty City
+  "mia-33138-004": [25.8360, -80.1930], // Little Haiti
+  "mia-33125-005": [25.8090, -80.2190], // Allapattah
+  "mia-33127-006": [25.8005, -80.1992], // Wynwood
+  "mia-33142-007": [25.8175, -80.2410], // Brownsville
+  "mia-33147-008": [25.8580, -80.2270], // West Little River
+  "mia-33133-009": [25.7280, -80.2555], // West Grove
+  "mdc-33161-010": [25.9010, -80.1900], // North Miami
+};
+// Confirmed public ArcGIS endpoints (no API key required).
+const GIS = {
+  zoning: "https://gis.miamigov.com/gis/rest/services/Zoning/ZoningMiami21/MapServer/5",
+  flood:  "https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28",
+};
+const LIVE = { mode: "sample", ok: 0 }; // 'sample' | 'loading' | 'live'
+
+function storiesToFeet(v) {
+  if (v == null) return null;
+  const n = parseFloat(String(v));
+  if (isNaN(n)) return null;
+  return /stor/i.test(String(v)) ? Math.round(n * 11) : n;
+}
+async function queryPoint(layer, lng, lat, outFields) {
+  const p = new URLSearchParams({
+    geometry: lng + "," + lat, geometryType: "esriGeometryPoint", inSR: "4326",
+    spatialRel: "esriSpatialRelIntersects", outFields, returnGeometry: "false", f: "json",
+  });
+  const res = await fetch(layer + "/query?" + p.toString());
+  if (!res.ok) throw new Error("http " + res.status);
+  const j = await res.json();
+  if (j.error) throw new Error(j.error.message || "arcgis error");
+  return (j.features && j.features[0] && j.features[0].attributes) || null;
+}
+async function enrichOne(site) {
+  const ll = SITE_LATLNG[site.id];
+  if (!ll) return false;
+  const lat = ll[0], lng = ll[1];
+  let any = false;
+  try {
+    const z = await queryPoint(GIS.zoning, lng, lat, "TRANSECT,TRANSECT_DESC,BLDG_HEIGHT,INTENSITY");
+    const code = z && (z.TRANSECT || z.Transect);
+    if (code) {
+      site.zoning.code = code;
+      const desc = z.TRANSECT_DESC || z.Transect_Desc; if (desc) site.zoning.name = desc;
+      const h = storiesToFeet(z.BLDG_HEIGHT != null ? z.BLDG_HEIGHT : z.Bldg_Height); if (h) site.zoning.maxHeight = h;
+      const far = z.INTENSITY != null ? z.INTENSITY : (z.Intensity != null ? z.Intensity : z.FLR);
+      if (far != null && !isNaN(parseFloat(far))) site.zoning.far = parseFloat(far);
+      site._liveZoning = true; any = true;
+    }
+  } catch (e) { /* keep baked zoning */ }
+  try {
+    const f = await queryPoint(GIS.flood, lng, lat, "FLD_ZONE,SFHA_TF");
+    if (f && f.FLD_ZONE) {
+      site._floodZone = f.FLD_ZONE;
+      site.incentiveFlags.floodAE = (f.SFHA_TF === "T") || /^(A|AE|AH|AO|AR|V|VE)$/i.test(f.FLD_ZONE);
+      site._liveFlood = true; any = true;
+    }
+  } catch (e) { /* keep baked flood */ }
+  return any;
+}
+async function enrichFromLiveGIS() {
+  LIVE.mode = "loading"; render();
+  let ok = 0;
+  for (const s of SITES) {
+    try { if (await enrichOne(s)) ok++; } catch (e) {}
+  }
+  LIVE.ok = ok;
+  LIVE.mode = ok > 0 ? "live" : "sample";
+  render();
+}
+function liveBadge() {
+  if (LIVE.mode === "loading")
+    return '<span style="width:5px;height:5px;border-radius:50%;background:var(--amber);display:inline-block"></span> Checking live Miami GIS…';
+  if (LIVE.mode === "live")
+    return '<span style="width:5px;height:5px;border-radius:50%;background:var(--good);display:inline-block;box-shadow:0 0 6px var(--good)"></span> Live Miami GIS · ' + LIVE.ok + '/' + SITES.length + ' parcels';
+  return '<span style="width:5px;height:5px;border-radius:50%;background:var(--muted);display:inline-block"></span> Sample values · tap ↻ to load live';
+}
+
 const DEFAULT_FILTERS = {
   lihtc: false, oz: false, densityBonus: false, inclusionary: false,
   qct: false, dda: false, tod: false, hudHome: false,
@@ -777,8 +861,7 @@ function Header() {
           <div>
             <div class="font-display font-bold tracking-tight text-[15px] leading-tight">ParcelPath</div>
             <div class="text-[10.5px] flex items-center gap-1.5" style="color:var(--muted)">
-              <span style="width:5px;height:5px;border-radius:50%;background:var(--good);display:inline-block;box-shadow:0 0 6px var(--good)"></span>
-              Miami-Dade · Affordable Housing
+              ${liveBadge()}
             </div>
           </div>
         </div>
@@ -792,8 +875,9 @@ function Header() {
           </div>
         </div>
         <div class="hidden md:flex items-center gap-2 text-[11px]" style="color:var(--muted)">
+          <button class="px-2.5 py-1 rounded-md" style="background:rgba(255,255,255,0.03);border:1px solid var(--border-soft);color:var(--text-2)" onclick="enrichFromLiveGIS()" title="Re-pull live zoning & flood data">↻ Live data</button>
           <span class="px-2.5 py-1 rounded-md" style="background:rgba(255,255,255,0.03);border:1px solid var(--border-soft)">${filteredSites().length} / ${SITES.length} sites</span>
-          <span class="px-2.5 py-1 rounded-md" style="background:rgba(94,234,212,0.06);border:1px solid rgba(94,234,212,0.2);color:var(--teal)">v0.2 prototype</span>
+          <span class="px-2.5 py-1 rounded-md" style="background:rgba(94,234,212,0.06);border:1px solid rgba(94,234,212,0.2);color:var(--teal)">v0.3 · Phase 0</span>
         </div>
       </div>
     </header>
@@ -1096,7 +1180,7 @@ function Detail(s) {
         </div>
 
         <section>
-          <div class="h-section"><span class="icon">${ICON.ruler}</span>Zoning <span class="chip ml-1">${s.zoning.code}</span></div>
+          <div class="h-section"><span class="icon">${ICON.ruler}</span>Zoning <span class="chip ml-1">${s.zoning.code}</span>${s._liveZoning ? '<span class="chip chip-good ml-1">live · City of Miami GIS</span>' : ''}</div>
           <div class="panel-2 p-4">
             <div class="font-display font-semibold text-[13.5px]">${s.zoning.name}</div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
@@ -1137,7 +1221,7 @@ function Detail(s) {
             </div>
             ${s.incentiveFlags.qct || s.incentiveFlags.dda ? `<div class="text-[11.5px] mt-2 flex items-start gap-1.5" style="color:var(--good)">${ICON.check}<span><strong>130% LIHTC basis boost</strong> applies (QCT/DDA designation)</span></div>` : ""}
             ${s.incentiveFlags.liveLocal ? `<div class="text-[11.5px] mt-1.5 flex items-start gap-1.5" style="color:var(--amber)">${ICON.spark}<span><strong>Live Local Act (FL SB 102):</strong> unlocks highest density + height within 1-mile radius, reduced parking, 75% ad-valorem exemption — if ≥40% units ≤120% AMI for 30 yrs.</span></div>` : ""}
-            ${s.incentiveFlags.floodAE ? `<div class="text-[11.5px] mt-1.5 flex items-start gap-1.5" style="color:var(--danger)">${ICON.warn}<span><strong>FEMA Flood Zone AE:</strong> base flood elevation +1' freeboard required; podium typology assumed.</span></div>` : ""}
+            ${s.incentiveFlags.floodAE ? `<div class="text-[11.5px] mt-1.5 flex items-start gap-1.5" style="color:var(--danger)">${ICON.warn}<span><strong>FEMA Flood Zone ${s._floodZone || 'AE'}:</strong> base flood elevation +1' freeboard required; podium typology assumed.${s._liveFlood ? ' (live FEMA NFHL)' : ''}</span></div>` : ""}
           </section>
         </div>
 
@@ -1299,10 +1383,12 @@ function render() {
       </div>
     </main>
     <footer class="max-w-[1400px] mx-auto px-6 py-8 text-[11px] leading-relaxed" style="color:var(--muted)">
-      <span style="color:var(--text-2);font-weight:600">ParcelPath</span> · v0.2 prototype · Mock data for 10 Miami-Dade sites · Production version would source parcels from Miami-Dade Property Appraiser + Regrid,
-      Miami 21 zoning from City of Miami GIS, QCT/DDA from HUD, OZ from CDFI Fund, FEMA flood layers, and rents from HUD FMR + CoStar.
-      Live Local Act preemption analysis would cross-reference highest-allowed density/height within a 1-mile radius.
-      Hard-cost assumptions include hurricane-code (FBC HVHZ) premiums. Pro-forma is sketch-level — first-pass screening only.
+      <span style="color:var(--text-2);font-weight:600">ParcelPath</span> · v0.3 · Phase 0 · Representative Miami-Dade parcels at real coordinates.
+      <strong style="color:var(--text-2)">Zoning</strong> (transect, height, FAR) is pulled live from the City of Miami Miami&nbsp;21 GIS, and
+      <strong style="color:var(--text-2)">flood zone</strong> from FEMA's National Flood Hazard Layer, queried at each parcel's location.
+      Incentive designations (QCT/DDA/OZ/Live Local) are tagged by neighborhood; rents and construction costs are estimates.
+      If live GIS can't be reached (e.g. opened from a file:// path in some browsers), the app shows sample values — host it, or use the ↻ button to retry.
+      Pro-forma is sketch-level — first-pass screening only.
     </footer>
   `;
 }
@@ -1313,8 +1399,11 @@ window.setPF = setPF;
 window.resetPF = resetPF;
 window.resetFilters = resetFilters;
 window.clearOneFilter = clearOneFilter;
+window.enrichFromLiveGIS = enrichFromLiveGIS;
 
 render();
+// Pull real zoning + flood data from public Miami / FEMA GIS for each parcel.
+enrichFromLiveGIS();
 </script>
 </body>
 </html>
