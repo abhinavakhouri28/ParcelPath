@@ -1021,7 +1021,7 @@ function Header() {
         <div class="hidden md:flex items-center gap-2 text-[11px]" style="color:var(--muted)">
           <button class="px-2.5 py-1 rounded-md" style="background:rgba(255,255,255,0.03);border:1px solid var(--border-soft);color:var(--text-2)" onclick="enrichFromLiveGIS()" title="Re-pull live zoning & flood data">↻ Live data</button>
           <span class="px-2.5 py-1 rounded-md" style="background:rgba(255,255,255,0.03);border:1px solid var(--border-soft)">${filteredSites().length} / ${SITES.length} sites</span>
-          <span class="px-2.5 py-1 rounded-md" style="background:rgba(94,234,212,0.06);border:1px solid rgba(94,234,212,0.2);color:var(--teal)">v0.3 · Phase 0</span>
+          <span class="px-2.5 py-1 rounded-md" style="background:rgba(94,234,212,0.06);border:1px solid rgba(94,234,212,0.2);color:var(--teal)">v0.3.1 · Phase 0</span>
         </div>
       </div>
     </header>
@@ -1580,7 +1580,7 @@ function render() {
       </div>
     </main>
     <footer class="max-w-[1400px] mx-auto px-6 py-8 text-[11px] leading-relaxed" style="color:var(--muted)">
-      <span style="color:var(--text-2);font-weight:600">ParcelPath</span> · v0.3 · Phase 0 · Representative Miami-Dade parcels at real coordinates.
+      <span style="color:var(--text-2);font-weight:600">ParcelPath</span> · v0.3.1 · Phase 0 · Representative Miami-Dade parcels at real coordinates.
       <strong style="color:var(--text-2)">Zoning</strong> (transect, height, FAR) is pulled live from the City of Miami Miami&nbsp;21 GIS, and
       <strong style="color:var(--text-2)">flood zone</strong> from FEMA's National Flood Hazard Layer, queried at each parcel's location.
       Incentive designations (QCT/DDA/OZ/Live Local) are tagged by neighborhood; rents and construction costs are estimates.
