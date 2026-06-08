@@ -1661,36 +1661,98 @@ function initThree(canvas) {
   scene.add(dir);
   return { renderer, scene, camera, building: null, buildingEdges: null, lot: null, lotEdges: null, ground: null, dims: null };
 }
-// Loads ESRI World Imagery for the parcel's lat/lng and swaps it onto the ground
-// plane material. Free, no API key. Silently keeps the dark fallback if it fails.
+// Web-Mercator tile math for converting lat/lng to XYZ tile coordinates.
+function _ll2tile(lng, lat, z) {
+  const n = Math.pow(2, z);
+  const x = (lng + 180) / 360 * n;
+  const latRad = lat * Math.PI / 180;
+  const y = (1 - Math.asinh(Math.tan(latRad)) / Math.PI) / 2 * n;
+  return [x, y];
+}
+function _tile2ll(x, y, z) {
+  const n = Math.pow(2, z);
+  const lng = x / n * 360 - 180;
+  const latRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n)));
+  return [lng, latRad * 180 / Math.PI];
+}
+
+// Loads ESRI World Imagery as a 2x2 grid of XYZ tiles, composites to a canvas,
+// then swaps it onto the ground plane. The tile endpoint is well-known CORS-friendly
+// (used by Leaflet/MapLibre/etc.), unlike the /export operation.
 function loadAerialForGround(site) {
   if (!threeCtx || !threeCtx.ground || !window.THREE) return;
   const ll = SITE_LATLNG[site.id];
-  if (!ll) return;
+  if (!ll) { console.warn("[ParcelPath] No lat/lng for site, skipping aerial:", site.id); return; }
   const [lat, lng] = ll;
-  const { W, D } = massingDims(site);
-  // Feet → degrees. 1° lat ≈ 364,000 ft; 1° lng = that × cos(lat).
-  const ftPerDegLat = 364000;
-  const ftPerDegLng = ftPerDegLat * Math.cos(lat * Math.PI / 180);
-  // Ground plane is W*2 × D*2 feet, centered on the parcel → half-extents = W, D.
-  const halfLngDeg = W / ftPerDegLng;
-  const halfLatDeg = D / ftPerDegLat;
-  const xmin = lng - halfLngDeg, xmax = lng + halfLngDeg;
-  const ymin = lat - halfLatDeg, ymax = lat + halfLatDeg;
-  const url = "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export"
-    + "?bbox=" + xmin + "," + ymin + "," + xmax + "," + ymax
-    + "&bboxSR=4326&imageSR=4326&size=1024,1024&format=jpg&f=image";
+  const z = 19;
+  const [xc, yc] = _ll2tile(lng, lat, z);
+  // Pick a 2x2 tile grid so the parcel is near the center of the grid.
+  const x0 = (xc - Math.floor(xc) < 0.5) ? Math.floor(xc) - 1 : Math.floor(xc);
+  const y0 = (yc - Math.floor(yc) < 0.5) ? Math.floor(yc) - 1 : Math.floor(yc);
+  const canvas = document.createElement("canvas");
+  canvas.width = 512; canvas.height = 512;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#0e1530"; ctx.fillRect(0, 0, 512, 512);
   const groundRef = threeCtx.ground;
-  const loader = new THREE.TextureLoader();
-  loader.setCrossOrigin("anonymous");
-  loader.load(url, (texture) => {
-    // Bail if the scene was rebuilt or canvas removed while we were loading.
-    if (!threeCtx || threeCtx.ground !== groundRef) { texture.dispose(); return; }
+  const tiles = [
+    [0, 0, x0,     y0    ],
+    [1, 0, x0 + 1, y0    ],
+    [0, 1, x0,     y0 + 1],
+    [1, 1, x0 + 1, y0 + 1],
+  ];
+  let pending = tiles.length, loadedAny = false;
+
+  const finish = () => {
+    if (!threeCtx || threeCtx.ground !== groundRef) return;
+    if (!loadedAny) {
+      console.warn("[ParcelPath] No aerial tiles loaded — keeping dark fallback.");
+      return;
+    }
+    // Compute the geographic extent of the 2x2 tile grid, in feet.
+    const [lngW, latN] = _tile2ll(x0,     y0,     z);
+    const [lngE, latS] = _tile2ll(x0 + 2, y0 + 2, z);
+    const ftPerDegLat = 364000;
+    const ftPerDegLng = ftPerDegLat * Math.cos(lat * Math.PI / 180);
+    const widthFt  = (lngE - lngW) * ftPerDegLng;
+    const heightFt = (latN - latS) * ftPerDegLat;
+    // Replace the ground mesh with one sized to the actual tile coverage,
+    // offset so the parcel sits at the origin of the scene.
+    const texture = new THREE.CanvasTexture(canvas);
     if (THREE.sRGBEncoding !== undefined) texture.encoding = THREE.sRGBEncoding;
-    texture.minFilter = THREE.LinearFilter;
-    groundRef.material.dispose();
-    groundRef.material = new THREE.MeshBasicMaterial({ map: texture });
-  }, undefined, () => { /* offline / blocked — keep dark fallback */ });
+    texture.needsUpdate = true;
+    const scene = threeCtx.scene;
+    scene.remove(groundRef);
+    groundRef.geometry.dispose(); groundRef.material.dispose();
+    const ng = new THREE.Mesh(
+      new THREE.PlaneGeometry(widthFt, heightFt),
+      new THREE.MeshBasicMaterial({ map: texture })
+    );
+    ng.rotation.x = -Math.PI / 2;
+    ng.position.y = -0.5;
+    // Center the tile grid on the parcel (the parcel sits at scene origin).
+    const gridCenterLng = (lngW + lngE) / 2;
+    const gridCenterLat = (latN + latS) / 2;
+    ng.position.x = (gridCenterLng - lng) * ftPerDegLng;
+    ng.position.z = -(gridCenterLat - lat) * ftPerDegLat; // north is -z in scene
+    scene.add(ng);
+    threeCtx.ground = ng;
+    console.log("[ParcelPath] Aerial imagery loaded for", site.id, "(" + widthFt.toFixed(0) + "ft × " + heightFt.toFixed(0) + "ft)");
+  };
+
+  tiles.forEach(([dx, dy, tx, ty]) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      ctx.drawImage(img, dx * 256, dy * 256, 256, 256);
+      loadedAny = true;
+      if (--pending === 0) finish();
+    };
+    img.onerror = () => {
+      console.warn("[ParcelPath] Aerial tile failed:", img.src);
+      if (--pending === 0) finish();
+    };
+    img.src = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/" + z + "/" + ty + "/" + tx;
+  });
 }
 
 function rebuildMassing(site) {
