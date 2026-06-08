@@ -10,6 +10,8 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.css" rel="stylesheet" />
 <script src="https://unpkg.com/maplibre-gl@4.5.0/dist/maplibre-gl.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   .maplibregl-popup-content{background:#0b1124;color:#ecf0fb;border:1px solid #243160;border-radius:8px;font-size:11px;box-shadow:0 12px 24px rgba(0,0,0,.5);padding:8px 10px}
   .maplibregl-popup-tip{border-top-color:#0b1124!important;border-bottom-color:#0b1124!important}
@@ -28,6 +30,10 @@
   .pp-x:hover{background:rgba(255,255,255,.06);color:#fff}
   .pp-link{color:#5eead4;cursor:pointer}
   .pp-link:hover{text-decoration:underline}
+  .massing-canvas{display:block;width:100%;height:340px;border-radius:10px;cursor:grab}
+  .massing-canvas:active{cursor:grabbing}
+  .ll-banner{background:linear-gradient(90deg,rgba(251,191,36,0.16),rgba(251,191,36,0.04));border:1px solid rgba(251,191,36,0.35);color:var(--amber);padding:9px 14px;border-radius:10px;font-size:12px;font-weight:500;display:flex;align-items:flex-start;gap:9px;line-height:1.45}
+  .ll-banner svg{flex-shrink:0;margin-top:1px;color:var(--amber)}
 </style>
 <style>
   :root {
@@ -322,6 +328,8 @@ const ICON = {
   check: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
   close: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
   refresh: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>`,
+  cube: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+  download: `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
 };
 
 // -------------------- MOCK DATA --------------------
@@ -1287,6 +1295,7 @@ function Detail(s) {
   }
   const pf = computePF(s);
   const inputs = getPF(s);
+  const ez = effectiveZoning(s);
 
   return `
     <div class="panel overflow-hidden fade-in">
@@ -1303,7 +1312,10 @@ function Detail(s) {
           <div class="font-display text-[20px] font-bold mt-1.5 leading-tight">${s.addr}</div>
           <div class="text-[12px] mt-1" style="color:var(--text-2)">${s.currentUse}</div>
         </div>
-        <button class="btn-icon" onclick="setState({selectedId:null})">${ICON.close}</button>
+        <div class="flex items-center gap-2">
+          <button class="btn-ghost flex items-center gap-1.5" style="font-size:11.5px" onclick="generateReport('${s.id}')" title="Generate one-page PDF brief">${ICON.download} Generate brief</button>
+          <button class="btn-icon" onclick="setState({selectedId:null})">${ICON.close}</button>
+        </div>
       </div>
 
       <div class="p-5 space-y-6">
@@ -1311,8 +1323,8 @@ function Detail(s) {
           ${[
             { k: "Lot Size", v: fmtSF(s.lotSF), sub: `${acres(s.lotSF)} ac` },
             { k: "Asking", v: fmt$(s.askPrice), sub: `$${(s.askPrice/s.lotSF).toFixed(0)}/SF land` },
-            { k: "By-right Units", v: Math.round((s.lotSF/43560) * s.zoning.maxUnitsAcre), sub: `${s.zoning.maxUnitsAcre}/ac` },
-            { k: "Max Height", v: `${s.zoning.maxHeight}'`, sub: `FAR ${s.zoning.far}` },
+            { k: "By-right Units", v: Math.round((s.lotSF/43560) * ez.maxUnitsAcre), sub: `${ez.maxUnitsAcre}/ac${ez.liveLocalActive ? ' · Live Local' : ''}` },
+            { k: "Max Height", v: `${ez.maxHeight}'`, sub: `FAR ${ez.far}${ez.liveLocalActive ? ' · Live Local' : ''}` },
             { k: "AMI Target", v: `${inputs.amiTarget}%`, sub: `${getPF(s).units} units planned` },
           ].map(t => `
             <div class="stat-tile">
@@ -1323,16 +1335,36 @@ function Detail(s) {
           `).join("")}
         </div>
 
+        ${ez.liveLocalActive ? `
+        <div class="ll-banner">
+          ${ICON.spark}
+          <span><strong>Live Local Act entitlement applied.</strong> By-right units, height, and FAR below reflect FL SB&nbsp;102 uplift over base zoning (${s.zoning.code}). Adjust the pro-forma unit count to take advantage.</span>
+        </div>` : ''}
+
         <section>
-          <div class="h-section"><span class="icon">${ICON.ruler}</span>Zoning <span class="chip ml-1">${s.zoning.code}</span>${s._liveZoning ? '<span class="chip chip-good ml-1">live · City of Miami GIS</span>' : ''}</div>
+          <div class="h-section"><span class="icon">${ICON.cube}</span>Buildable envelope · 3D <span class="text-[10px]" style="color:var(--muted);font-weight:500;letter-spacing:0;text-transform:none;margin-left:6px">(auto-rotating; massing reflects ${ez.liveLocalActive ? 'Live Local' : 'base'} zoning)</span></div>
+          <div class="panel-2 overflow-hidden">
+            <div id="massing-slot" style="width:100%;height:340px;background:#0b1124"></div>
+            <div class="px-4 py-2.5 text-[11px] flex flex-wrap gap-x-5 gap-y-1" style="color:var(--muted);border-top:1px solid var(--border-soft)">
+              <span><strong style="color:var(--text-2)">Lot</strong> ~${fmtNum(Math.round(Math.sqrt(s.lotSF*4/3)))}' × ${fmtNum(Math.round(s.lotSF/Math.sqrt(s.lotSF*4/3)))}'</span>
+              <span><strong style="color:var(--text-2)">Max height</strong> ${ez.maxHeight}'</span>
+              <span><strong style="color:var(--text-2)">FAR</strong> ${ez.far}</span>
+              <span><strong style="color:var(--text-2)">Max GFA</strong> ≈ ${fmtNum(Math.round(ez.far*s.lotSF))} SF</span>
+              ${ez.liveLocalActive ? '<span style="color:var(--amber)"><strong>Live Local uplift active</strong></span>' : ''}
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="h-section"><span class="icon">${ICON.ruler}</span>Zoning <span class="chip ml-1">${s.zoning.code}</span>${ez.liveLocalActive ? '<span class="chip chip-amber ml-1">Live Local</span>' : ''}${s._liveZoning ? '<span class="chip chip-good ml-1">live · City of Miami GIS</span>' : ''}</div>
           <div class="panel-2 p-4">
             <div class="font-display font-semibold text-[13.5px]">${s.zoning.name}</div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
               ${[
-                ["FAR", s.zoning.far],
-                ["Max height", s.zoning.maxHeight + "'"],
-                ["Density", s.zoning.maxUnitsAcre + " u/ac"],
-                ["Parking min", s.zoning.minParking + "/u"],
+                ["FAR", ez.far],
+                ["Max height", ez.maxHeight + "'"],
+                ["Density", ez.maxUnitsAcre + " u/ac"],
+                ["Parking min", ez.minParking + "/u"],
               ].map(([k,v]) => `
                 <div>
                   <div class="text-[10px] uppercase tracking-wider" style="color:var(--muted)">${k}</div>
@@ -1559,12 +1591,295 @@ function Modal() {
 function openDoc(k) { setState({ modal: k }); }
 function closeDoc() { setState({ modal: null }); }
 
+// -------------------- LIVE LOCAL ACT UPLIFT (per-parcel) --------------------
+// Illustrative entitlement under FL SB 102 for each eligible parcel — values
+// reflect typical "highest density/height within 1 mile" outcomes. The real
+// engine (Phase 2) computes from the actual zoning layer within a 1-mile radius.
+const LIVE_LOCAL = {
+  "mia-33136-001": { maxUnitsAcre: 200, maxHeight: 150, far: 7   }, // Overtown
+  "mia-33135-002": { maxUnitsAcre: 120, maxHeight: 110, far: 5   }, // Little Havana
+  "mia-33142-003": { maxUnitsAcre: 90,  maxHeight: 80,  far: 3.5 }, // Liberty City
+  "mia-33138-004": { maxUnitsAcre: 95,  maxHeight: 85,  far: 3.5 }, // Little Haiti
+  "mia-33125-005": { maxUnitsAcre: 130, maxHeight: 115, far: 5   }, // Allapattah
+  "mia-33127-006": { maxUnitsAcre: 200, maxHeight: 150, far: 6   }, // Wynwood
+  "mia-33142-007": { maxUnitsAcre: 90,  maxHeight: 80,  far: 3.5 }, // Brownsville
+  "mia-33147-008": { maxUnitsAcre: 80,  maxHeight: 75,  far: 3   }, // West Little River
+  "mia-33133-009": { maxUnitsAcre: 80,  maxHeight: 75,  far: 3   }, // West Grove
+  "mdc-33161-010": { maxUnitsAcre: 150, maxHeight: 110, far: 5   }, // North Miami
+};
+function effectiveZoning(site) {
+  const llOn = state.filters.liveLocal && site.incentiveFlags.liveLocal;
+  const data = llOn ? LIVE_LOCAL[site.id] : null;
+  return {
+    code: site.zoning.code,
+    name: site.zoning.name,
+    setbacks: site.zoning.setbacks,
+    far:           data ? data.far          : site.zoning.far,
+    maxHeight:     data ? data.maxHeight    : site.zoning.maxHeight,
+    maxUnitsAcre:  data ? data.maxUnitsAcre : site.zoning.maxUnitsAcre,
+    minParking:    data ? 0                 : site.zoning.minParking,
+    liveLocalActive: !!data,
+    base: site.zoning,
+  };
+}
+
+// -------------------- 3D MASSING (Three.js) --------------------
+let threeCtx = null, threeCanvas = null, threeAnimId = null, threeAutoRotate = 0;
+
+function lotDims(lotSF) {
+  const w = Math.sqrt((lotSF || 10000) * 4/3);
+  return [w, (lotSF || 10000) / w];
+}
+function parseSetbacks(str) {
+  const m = /(\d+)\D+(\d+)\D+(\d+)/.exec(str || "");
+  return m ? [parseInt(m[1]), parseInt(m[2]), parseInt(m[3])] : [10, 5, 10];
+}
+function massingDims(site) {
+  const ez = effectiveZoning(site);
+  const [W, D] = lotDims(site.lotSF);
+  const [front, side, rear] = parseSetbacks(ez.setbacks);
+  const fw = Math.max(20, W - 2 * side);
+  const fd = Math.max(20, D - front - rear);
+  let h = ez.maxHeight || 50;
+  const far = ez.far || 1.5;
+  if (far && fw * fd > 0) {
+    const heightByFAR = ((far * site.lotSF) / (fw * fd)) * 11;
+    h = Math.min(h, heightByFAR);
+  }
+  return { W, D, fw, fd, h, ez };
+}
+function initThree(canvas) {
+  if (!window.THREE) return null;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b1124);
+  const camera = new THREE.PerspectiveCamera(40, 1, 1, 8000);
+  scene.add(new THREE.AmbientLight(0x6677aa, 0.7));
+  const dir = new THREE.DirectionalLight(0xffffff, 0.75);
+  dir.position.set(100, 300, 200);
+  scene.add(dir);
+  return { renderer, scene, camera, building: null, buildingEdges: null, lot: null, lotEdges: null, ground: null, dims: null };
+}
+function rebuildMassing(site) {
+  if (!threeCtx) return;
+  const scene = threeCtx.scene;
+  for (const key of ["building","buildingEdges","lot","lotEdges","ground"]) {
+    if (threeCtx[key]) {
+      scene.remove(threeCtx[key]);
+      threeCtx[key].geometry && threeCtx[key].geometry.dispose();
+      threeCtx[key].material && threeCtx[key].material.dispose();
+      threeCtx[key] = null;
+    }
+  }
+  const { W, D, fw, fd, h, ez } = massingDims(site);
+  threeCtx.ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(W * 1.8, D * 1.8),
+    new THREE.MeshBasicMaterial({ color: 0x0e1530 })
+  );
+  threeCtx.ground.rotation.x = -Math.PI / 2;
+  threeCtx.ground.position.y = -0.5;
+  scene.add(threeCtx.ground);
+  threeCtx.lot = new THREE.Mesh(
+    new THREE.PlaneGeometry(W, D),
+    new THREE.MeshBasicMaterial({ color: 0x1a2548 })
+  );
+  threeCtx.lot.rotation.x = -Math.PI / 2;
+  scene.add(threeCtx.lot);
+  threeCtx.lotEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.PlaneGeometry(W, D)),
+    new THREE.LineBasicMaterial({ color: 0x5eead4, transparent: true, opacity: 0.45 })
+  );
+  threeCtx.lotEdges.rotation.x = -Math.PI / 2;
+  threeCtx.lotEdges.position.y = 0.05;
+  scene.add(threeCtx.lotEdges);
+  const bg = new THREE.BoxGeometry(fw, h, fd);
+  const buildingColor = ez.liveLocalActive ? 0xfbbf24 : 0x5eead4;
+  threeCtx.building = new THREE.Mesh(
+    bg,
+    new THREE.MeshPhongMaterial({ color: buildingColor, transparent: true, opacity: 0.55, shininess: 60 })
+  );
+  threeCtx.building.position.y = h / 2;
+  scene.add(threeCtx.building);
+  threeCtx.buildingEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(bg),
+    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 })
+  );
+  threeCtx.buildingEdges.position.y = h / 2;
+  scene.add(threeCtx.buildingEdges);
+  const maxDim = Math.max(W, D, h * 1.4);
+  threeCtx.dims = { W, D, h, maxDim };
+}
+function animateThree() {
+  if (threeAnimId) return;
+  const tick = () => {
+    if (!threeCtx || !threeCanvas || !threeCanvas.isConnected) { threeAnimId = null; return; }
+    threeAutoRotate += 0.0028;
+    const r = threeCtx.dims ? threeCtx.dims.maxDim * 1.1 : 200;
+    const cy = threeCtx.dims ? threeCtx.dims.maxDim * 0.7 : 120;
+    threeCtx.camera.position.set(Math.cos(threeAutoRotate) * r, cy, Math.sin(threeAutoRotate) * r);
+    const ly = threeCtx.dims ? threeCtx.dims.h * 0.4 : 30;
+    threeCtx.camera.lookAt(0, ly, 0);
+    threeCtx.renderer.render(threeCtx.scene, threeCtx.camera);
+    threeAnimId = requestAnimationFrame(tick);
+  };
+  threeAnimId = requestAnimationFrame(tick);
+}
+function mountMassing(site) {
+  const slot = document.getElementById("massing-slot");
+  if (!slot || !site) return;
+  if (!window.THREE) {
+    slot.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:12px">3D viewer unavailable — Three.js failed to load (check your connection).</div>';
+    return;
+  }
+  if (!threeCanvas) {
+    threeCanvas = document.createElement("canvas");
+    threeCanvas.className = "massing-canvas";
+    threeCtx = initThree(threeCanvas);
+    if (!threeCtx) { threeCanvas = null; return; }
+  }
+  slot.innerHTML = "";
+  slot.appendChild(threeCanvas);
+  const w = slot.clientWidth || 600, h = 340;
+  threeCtx.renderer.setSize(w, h, false);
+  threeCtx.camera.aspect = w / h;
+  threeCtx.camera.updateProjectionMatrix();
+  rebuildMassing(site);
+  animateThree();
+}
+
+// -------------------- PDF REPORT EXPORT --------------------
+function fmtDateShort() {
+  return new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+function ReportHTML(s) {
+  const pf = computePF(s);
+  const ez = effectiveZoning(s);
+  const flags = s.incentiveFlags;
+  const byRight = Math.round((s.lotSF / 43560) * ez.maxUnitsAcre);
+  const incs = [];
+  if (flags.lihtc) incs.push("LIHTC");
+  if (flags.qct) incs.push("QCT");
+  if (flags.dda) incs.push("DDA");
+  if (flags.oz) incs.push("Opportunity Zone");
+  if (flags.liveLocal) incs.push("Live Local Act");
+  if (flags.densityBonus) incs.push("Density Bonus");
+  if (flags.tod) incs.push("TOD");
+  if (flags.inclusionary) incs.push("Inclusionary");
+  return `
+<div style="padding:28px 32px;color:#0e1530;font-family:Inter,Arial,sans-serif;background:#ffffff;width:8.5in;box-sizing:border-box">
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #0d9488;padding-bottom:10px">
+    <div>
+      <div style="font-size:22px;font-weight:800;color:#13243F;letter-spacing:-0.01em">ParcelPath</div>
+      <div style="font-size:10px;color:#6b7591">Affordable-housing site brief · Miami-Dade, FL</div>
+    </div>
+    <div style="text-align:right;font-size:10px;color:#6b7591">Generated ${fmtDateShort()}<br/>parcelpath.com</div>
+  </div>
+  <div style="margin-top:16px">
+    <div style="font-size:11px;color:#0d9488;font-weight:600;letter-spacing:0.05em;text-transform:uppercase">${s.neighborhood} &middot; ${s.zip} &middot; ${s.county}</div>
+    <div style="font-size:22px;font-weight:700;margin-top:4px;letter-spacing:-0.01em">${s.addr}</div>
+    <div style="font-size:11px;color:#6b7591;margin-top:3px">${s.currentUse}</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px">
+    ${[
+      ["Lot", fmtSF(s.lotSF), acres(s.lotSF)+" acres"],
+      ["Asking", fmt$(s.askPrice), "$"+(s.askPrice/s.lotSF).toFixed(0)+"/SF land"],
+      ["Zoning", s.zoning.code, "FAR "+ez.far+" &middot; "+ez.maxHeight+"' max"],
+      ["By-right units", String(byRight), ez.maxUnitsAcre+" u/ac"+(ez.liveLocalActive?" &middot; Live Local":"")],
+    ].map(([k,v,sub]) => `<div style="border:1px solid #d6dceb;border-radius:8px;padding:9px 10px"><div style="font-size:9px;color:#6b7591;text-transform:uppercase;letter-spacing:0.08em;font-weight:600">${k}</div><div style="font-size:15px;font-weight:700;margin-top:3px">${v}</div><div style="font-size:9.5px;color:#6b7591;margin-top:1px">${sub}</div></div>`).join("")}
+  </div>
+  ${ez.liveLocalActive ? `<div style="margin-top:8px;padding:8px 12px;background:#fef3c7;border:1px solid #fbbf24;border-radius:8px;font-size:10.5px;color:#92400e"><strong>Live Local Act applied:</strong> values reflect SB 102 entitlement uplift over base zoning (${s.zoning.code}).</div>` : ""}
+  <div style="margin-top:14px;display:grid;grid-template-columns:1.4fr 1fr;gap:14px">
+    <div>
+      <div style="font-size:10px;color:#6b7591;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-bottom:4px">Zoning</div>
+      <div style="font-size:12px"><strong>${s.zoning.name}</strong> &middot; setbacks ${s.zoning.setbacks}</div>
+      <div style="font-size:11px;color:#3a4763;margin-top:3px">Allowed uses: ${s.allowedUses.join(" &middot; ")}</div>
+      <div style="font-size:11px;color:#3a4763;margin-top:3px">Construction: ${s.constructionTypes.join(" &middot; ")}</div>
+    </div>
+    <div>
+      <div style="font-size:10px;color:#6b7591;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-bottom:4px">Incentives</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        ${incs.map(i => `<span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:9999px;background:#e6f5f3;color:#0d9488">${i}</span>`).join("")}
+      </div>
+      ${(flags.qct||flags.dda) ? `<div style="font-size:10px;color:#047857;margin-top:5px">&#10003; 130% LIHTC basis boost</div>` : ""}
+      ${flags.floodAE ? `<div style="font-size:10px;color:#dc2626;margin-top:3px">&#9888; FEMA flood ${s._floodZone||"AE"} &mdash; podium required</div>` : ""}
+    </div>
+  </div>
+  <div style="margin-top:14px">
+    <div style="font-size:10px;color:#6b7591;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-bottom:6px">Permits &amp; approvals (estimated)</div>
+    <table style="width:100%;border-collapse:collapse;font-size:10.5px">
+      <thead><tr style="color:#6b7591"><th style="text-align:left;padding:5px 8px;border-bottom:1px solid #d6dceb;font-weight:600">Permit</th><th style="text-align:left;padding:5px 8px;border-bottom:1px solid #d6dceb;font-weight:600">Timeline</th><th style="text-align:right;padding:5px 8px;border-bottom:1px solid #d6dceb;font-weight:600">Est. fee</th><th style="text-align:left;padding:5px 8px;border-bottom:1px solid #d6dceb;font-weight:600">Status</th></tr></thead>
+      <tbody>
+        ${s.permits.map(p => `<tr><td style="padding:5px 8px;border-bottom:1px solid #f0f3f7">${p.name}</td><td style="padding:5px 8px;border-bottom:1px solid #f0f3f7;color:#3a4763">${p.time}</td><td style="padding:5px 8px;border-bottom:1px solid #f0f3f7;text-align:right">${fmt$(p.cost)}</td><td style="padding:5px 8px;border-bottom:1px solid #f0f3f7;color:${p.required?"#b45309":"#6b7591"}">${p.required?"Required":"Optional"}</td></tr>`).join("")}
+      </tbody>
+    </table>
+  </div>
+  <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div>
+      <div style="font-size:10px;color:#6b7591;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-bottom:4px">Pro-forma (uses)</div>
+      <div style="font-size:11px;color:#3a4763;line-height:1.7">
+        Land &middot; ${fmt$(pf.landCost)}<br/>
+        Hard &middot; ${fmt$(pf.hardCost)} <span style="color:#6b7591">(${fmtNum(pf.buildableSF)} GSF)</span><br/>
+        Soft (22%) &middot; ${fmt$(pf.softCost)}<br/>
+        Contingency (5%) &middot; ${fmt$(pf.contingency)}<br/>
+        <strong style="color:#0d9488">Total Development Cost &middot; ${fmt$(pf.tdc)}</strong>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:10px;color:#6b7591;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;margin-bottom:4px">Returns &amp; capital stack</div>
+      <div style="font-size:11px;color:#3a4763;line-height:1.7">
+        Yield-on-Cost &middot; <strong style="color:${pf.yieldOnCost>=0.06?"#047857":pf.yieldOnCost>=0.045?"#b45309":"#dc2626"}">${fmtPct(pf.yieldOnCost)}</strong><br/>
+        NOI (yr 1) &middot; ${fmt$(pf.noi)}<br/>
+        10-yr LIHTC &middot; ${fmt$(pf.tenYrCredits)}<br/>
+        LIHTC equity &middot; ${fmt$(pf.lihtcEquity)} <span style="color:#6b7591">(${(pf.lihtcRate*100).toFixed(0)}%${pf.basisBoost===1.3?" boost":""})</span><br/>
+        Perm loan &middot; ${fmt$(pf.permLoan)}<br/>
+        GP equity / gap &middot; ${fmt$(pf.gpEquity)}
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:12px;font-size:10.5px;color:#3a4763;border-top:1px solid #d6dceb;padding-top:8px">
+    <strong>Notes.</strong> ${s.notes}
+  </div>
+  <div style="margin-top:10px;font-size:8.5px;color:#6b7591;font-style:italic">
+    Illustrative estimates for first-pass screening only. Not legal, financial, or zoning advice. Verify independently with the relevant authorities and professionals before acting on any output. ParcelPath &middot; abhinav.akhouri@gmail.com
+  </div>
+</div>`;
+}
+async function generateReport(siteId) {
+  const s = SITES.find(x => x.id === siteId);
+  if (!s) return;
+  const tmp = document.createElement("div");
+  tmp.style.cssText = "position:absolute;left:-10000px;top:0;background:#fff";
+  tmp.innerHTML = ReportHTML(s);
+  document.body.appendChild(tmp);
+  try {
+    if (window.html2pdf) {
+      await html2pdf().set({
+        margin: [0.4, 0.5, 0.4, 0.5],
+        filename: "ParcelPath_" + s.zip + "_" + s.neighborhood.replace(/\s+/g, "") + ".pdf",
+        html2canvas: { scale: 2, backgroundColor: "#ffffff" },
+        jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+        pagebreak: { mode: ["avoid-all"] }
+      }).from(tmp.firstElementChild).save();
+    } else {
+      const w = window.open("", "_blank");
+      w.document.write("<!doctype html><html><head><title>ParcelPath Site Brief</title></head><body>" + tmp.innerHTML + "</body></html>");
+      w.document.close();
+      w.focus();
+      setTimeout(() => w.print(), 250);
+    }
+  } finally {
+    tmp.remove();
+  }
+}
+
 function render() {
   const sites = filteredSites();
   const selected = SITES.find(s => s.id === state.selectedId) || null;
   const activeFiltersHtml = ActiveFilters();
-  // Preserve the live MapLibre node across full re-renders (re-attached after).
+  // Preserve the live MapLibre node and Three.js canvas across full re-renders.
   if (mapNode && mapNode.parentNode) mapNode.parentNode.removeChild(mapNode);
+  if (threeCanvas && threeCanvas.parentNode) threeCanvas.parentNode.removeChild(threeCanvas);
   document.getElementById("app").innerHTML = `
     ${Header()}
     <main class="max-w-[1400px] mx-auto px-6 py-5">
@@ -1595,6 +1910,7 @@ function render() {
     ${Modal()}
   `;
   mountMap(filteredSites());
+  if (selected) mountMassing(selected);
 }
 
 window.setState = setState;
@@ -1606,6 +1922,7 @@ window.clearOneFilter = clearOneFilter;
 window.enrichFromLiveGIS = enrichFromLiveGIS;
 window.openDoc = openDoc;
 window.closeDoc = closeDoc;
+window.generateReport = generateReport;
 
 render();
 // Pull real zoning + flood data from public Miami / FEMA GIS for each parcel.
