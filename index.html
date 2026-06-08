@@ -1661,6 +1661,38 @@ function initThree(canvas) {
   scene.add(dir);
   return { renderer, scene, camera, building: null, buildingEdges: null, lot: null, lotEdges: null, ground: null, dims: null };
 }
+// Loads ESRI World Imagery for the parcel's lat/lng and swaps it onto the ground
+// plane material. Free, no API key. Silently keeps the dark fallback if it fails.
+function loadAerialForGround(site) {
+  if (!threeCtx || !threeCtx.ground || !window.THREE) return;
+  const ll = SITE_LATLNG[site.id];
+  if (!ll) return;
+  const [lat, lng] = ll;
+  const { W, D } = massingDims(site);
+  // Feet → degrees. 1° lat ≈ 364,000 ft; 1° lng = that × cos(lat).
+  const ftPerDegLat = 364000;
+  const ftPerDegLng = ftPerDegLat * Math.cos(lat * Math.PI / 180);
+  // Ground plane is W*2 × D*2 feet, centered on the parcel → half-extents = W, D.
+  const halfLngDeg = W / ftPerDegLng;
+  const halfLatDeg = D / ftPerDegLat;
+  const xmin = lng - halfLngDeg, xmax = lng + halfLngDeg;
+  const ymin = lat - halfLatDeg, ymax = lat + halfLatDeg;
+  const url = "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export"
+    + "?bbox=" + xmin + "," + ymin + "," + xmax + "," + ymax
+    + "&bboxSR=4326&imageSR=4326&size=1024,1024&format=jpg&f=image";
+  const groundRef = threeCtx.ground;
+  const loader = new THREE.TextureLoader();
+  loader.setCrossOrigin("anonymous");
+  loader.load(url, (texture) => {
+    // Bail if the scene was rebuilt or canvas removed while we were loading.
+    if (!threeCtx || threeCtx.ground !== groundRef) { texture.dispose(); return; }
+    if (THREE.sRGBEncoding !== undefined) texture.encoding = THREE.sRGBEncoding;
+    texture.minFilter = THREE.LinearFilter;
+    groundRef.material.dispose();
+    groundRef.material = new THREE.MeshBasicMaterial({ map: texture });
+  }, undefined, () => { /* offline / blocked — keep dark fallback */ });
+}
+
 function rebuildMassing(site) {
   if (!threeCtx) return;
   const scene = threeCtx.scene;
@@ -1673,18 +1705,22 @@ function rebuildMassing(site) {
     }
   }
   const { W, D, fw, fd, h, ez } = massingDims(site);
+  // Ground plane — aerial imagery loads async into this material; dark fallback meanwhile.
   threeCtx.ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(W * 1.8, D * 1.8),
+    new THREE.PlaneGeometry(W * 2, D * 2),
     new THREE.MeshBasicMaterial({ color: 0x0e1530 })
   );
   threeCtx.ground.rotation.x = -Math.PI / 2;
   threeCtx.ground.position.y = -0.5;
   scene.add(threeCtx.ground);
+  loadAerialForGround(site);
+  // Translucent teal overlay just on the parcel itself, so the aerial shows through.
   threeCtx.lot = new THREE.Mesh(
     new THREE.PlaneGeometry(W, D),
-    new THREE.MeshBasicMaterial({ color: 0x1a2548 })
+    new THREE.MeshBasicMaterial({ color: 0x5eead4, transparent: true, opacity: 0.18 })
   );
   threeCtx.lot.rotation.x = -Math.PI / 2;
+  threeCtx.lot.position.y = 0.02;
   scene.add(threeCtx.lot);
   threeCtx.lotEdges = new THREE.LineSegments(
     new THREE.EdgesGeometry(new THREE.PlaneGeometry(W, D)),
